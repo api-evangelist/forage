@@ -1,0 +1,44 @@
+generated: '2026-07-19'
+method: searched
+source: https://docs.joinforage.app/docs/authentication
+docs: https://docs.joinforage.app/docs/authentication-concepts
+summary:
+  types: [oauth2, http]
+  scheme: bearer
+  oauth2_flows: [clientCredentials]
+  model: >-
+    OAuth 2.0 bearer tokens. Long-lived authentication tokens are minted from a
+    Client ID + Client Secret for server-side requests; short-lived session tokens
+    are minted from an authentication token for client-side / SDK requests. Tokens
+    are passed in the HTTP Authorization header.
+schemes:
+- name: authentication_token
+  type: oauth2
+  flow: clientCredentials
+  description: >-
+    Long-lived OAuth 2.0 bearer token created with a POST to /o/token/ using the
+    app's Client ID and Client Secret from the Forage dashboard. Used in the
+    Authorization header of server-side requests for sensitive tasks (create order,
+    capture payment). Default expiry 7 days (604800s), configurable up to 30 days.
+    Up to 1000 active tokens per Client ID/Secret pair; revoke via /o/revoke_token/
+    or /o/bulk_revoke/.
+  token_endpoint: https://api.joinforage.app/o/token/
+  revoke_endpoint: https://api.joinforage.app/o/revoke_token/
+  bulk_revoke_endpoint: https://api.joinforage.app/o/bulk_revoke/
+  expiry_default_seconds: 604800
+  scope: server-side
+- name: session_token
+  type: http
+  scheme: bearer
+  description: >-
+    Short-lived OAuth 2.0 bearer token created with a POST to /session_token/ from
+    a valid authentication token. Expires after 15 minutes. Required for client-side
+    requests and SDK methods that submit customer data (e.g. create PaymentMethod).
+  token_endpoint: https://api.joinforage.app/session_token/
+  expiry_seconds: 900
+  scope: client-side
+notes:
+- The Merchant-Account header is required for HSA/FSA and credit/debit payment methods;
+  optional for EBT payment methods (EBT PaymentMethods are tenant-scoped).
+- Sandbox credentials are managed at https://dashboard.sandbox.joinforage.app/ and
+  production at https://dashboard.joinforage.app/.

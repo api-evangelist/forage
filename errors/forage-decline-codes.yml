@@ -1,0 +1,46 @@
+generated: '2026-07-19'
+method: searched
+source: https://docs.joinforage.app/reference/sdk-errors
+note: >-
+  EBT network decline codes returned during processing (balance check, payment,
+  refund) — distinct from Forage API-level errors in forage-problem-types.yml.
+  These originate from the EBT network, not Forage tokenization. The envelope field
+  carries the `code` (e.g. ebt_error_51); receipt.message surfaces the human message.
+envelope_field: errors[].code
+decline_codes:
+- code: ebt_error_14
+  meaning: Invalid card number — Re-enter Transaction
+  action: Verify the EBT card details and retry.
+- code: ebt_error_51
+  meaning: Insufficient funds. Remaining balances are SNAP {amount}, EBT Cash {amount}
+  action: Adjust the transaction amount to match the available balance. Details include
+    snapBalance and cashBalance.
+- code: ebt_error_54
+  meaning: Expired card
+  action: Customer must obtain a new EBT card.
+- code: ebt_error_55
+  meaning: Invalid PIN or PIN not selected
+  action: Customer entered an incorrect PIN; allow retry.
+  masked_to_buyer: true
+- code: ebt_error_61
+  meaning: Return exceeds benefit authorization (Invalid Transaction)
+  action: Refund amount exceeds the issuer limit; reduce the refund.
+- code: ebt_error_62
+  meaning: Restricted card — Cannot Process, Call Customer Service
+  action: Customer should contact EBT support. Also seen on refund failures for frozen
+    cards.
+- code: ebt_error_75
+  meaning: PIN tries exceeded
+  action: Account is locked for 24 hours after 4 failed attempts.
+- code: ebt_error_80
+  meaning: Voucher expired — Cannot Process, Call Customer Service
+  action: Voucher is no longer valid; use a new one.
+- code: ebt_error_91
+  meaning: Authorizer not available / time-out (Host Not Available)
+  action: EBT network offline; retry later.
+- code: ebt_error_96
+  meaning: System malfunction — Cannot Process, Call Customer Service
+  action: Network cannot process; contact support if persistent.
+guidance: >-
+  For network/system errors (90s range), prompt a retry. For card/account issues,
+  direct customers to EBT support or remediate locally.

@@ -1,0 +1,63 @@
+generated: '2026-07-19'
+method: searched
+source: https://docs.joinforage.app/docs/test-cards
+environments:
+  sandbox:
+    api_base: https://api.sandbox.joinforage.app
+    dashboard: https://dashboard.sandbox.joinforage.app/
+  production:
+    api_base: https://api.joinforage.app
+    dashboard: https://dashboard.joinforage.app/
+test_helpers:
+- endpoint: POST /payments/{payment_ref}/capture-sync/
+  purpose: Programmatically capture a Payment during sandbox testing (sandbox only).
+- endpoint: POST /payments/{payment_ref}/collect_pin_backend/
+  purpose: Programmatically associate a test PIN with a Payment (sandbox only).
+ebt_test_cards:
+  valid:
+    pattern: Any 16-, 18-, or 19-digit number starting with 9999
+    balances: $1000 SNAP and $1000 EBT Cash, reset hourly
+  invalid:
+  - card: '5555 5555 5555 5514'
+    triggers: Invalid card number
+  - card: '5555 5555 5555 5554'
+    triggers: Expired card
+  - card: '6543 21XX XXXX XXXX'
+    triggers: $0 EBT Cash balance
+  - card: '3333 3333 3333 3345'
+    triggers: EBT succeeds, credit portion fails
+  - card: '4444 4444 4444 4414'
+    triggers: Invalid card number
+  - card: '4444 4444 4444 4443'
+    triggers: Lost/stolen card
+  - card: '4444 4444 4444 4451'
+    triggers: Insufficient funds (ebt_error_51)
+  - card: '4444 4444 4444 4454'
+    triggers: Expired card (ebt_error_54)
+  - card: '4444 4444 4444 4455'
+    triggers: Invalid PIN (ebt_error_55)
+  - card: '4444 4444 4444 4462'
+    triggers: Card restricted / fraud (ebt_error_62)
+  - card: '4333 3333 3333 3311'
+    triggers: EBT Cash refund failure
+  - card: '4333 3333 3333 3309'
+    triggers: SNAP refund failure
+  - card: '6777 7777 7777 XXXX'
+    triggers: Incorrect PIN triggers failure
+  - card: '1111 1111 1111 1111'
+    triggers: SDK validation error
+  - card: '1234 1234 1234 12345'
+    triggers: Unsupported card length
+hsa_fsa_test_cards:
+  valid:
+  - '4000 0512 3000 2839'
+  - '4000 0584 0000 0071'
+  invalid:
+  - card: '4242 4242 4242 4242'
+    triggers: Non-HSA/FSA card
+  - card: '4000 0000 0000 0069'
+    triggers: Expired card
+  - card: '4000 0000 0000 0127'
+    triggers: Bad CVC
+  - card: '4000 0000 0000 0341'
+    triggers: Authorization failure

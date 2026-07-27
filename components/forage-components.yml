@@ -1,0 +1,33 @@
+generated: '2026-07-19'
+method: searched
+source: https://docs.joinforage.app/reference/ebt-elements
+description: >-
+  Forage ships client-side "Forage Elements" — prebuilt, PCI-scope-reducing UI
+  components that securely collect EBT card numbers and PINs and drive payment
+  operations. Distinct from the server-side SDKs catalogued in packages/.
+families:
+- name: Forage Elements (Web)
+  loader: forage-js-sdk (npm)
+  docs: https://docs.joinforage.app/reference/ebt-elements
+  components:
+  - EBT card number / PAN element
+  - EBT PIN entry element
+  - Payment sheet tokenization element
+  methods: [mount(), on(), clear(), destroy()]
+  events: [change, ready]
+- name: Forage iOS Elements
+  loader: ForageSDK (CocoaPods / Swift Package Manager)
+  docs: https://docs.joinforage.app/docs/forage-ios-styling-guide
+  components:
+  - ForagePANEditText / card element
+  - ForagePINEditText / PIN element
+- name: Forage Android Elements
+  loader: com.joinforage:forage-android (Maven)
+  docs: https://docs.joinforage.app/docs/forage-android-styling-guide
+  components:
+  - ForagePANEditText / card element
+  - ForagePINEditText / PIN element
+- name: Fully Hosted Checkout
+  docs: https://docs.joinforage.app/docs/fully-hosted
+  components:
+  - Forage-hosted redirect checkout UI (Session redirect_url)

@@ -1,0 +1,40 @@
+generated: '2026-07-19'
+method: searched
+source: https://docs.joinforage.app/docs/integration-options
+packages:
+- language: javascript
+  registry: npm
+  name: forage-js-sdk
+  version: 1.3.1
+  url: https://www.npmjs.com/package/forage-js-sdk
+  install: npm install forage-js-sdk
+  official: true
+  description: Forage JS front-end JavaScript library for processing EBT SNAP, EBT
+    Cash, and HSA/FSA payments (Forage Elements + checkout operations).
+- language: kotlin
+  registry: maven
+  name: com.joinforage:forage-android
+  version: 4.2.2
+  url: https://mvnrepository.com/artifact/com.joinforage/forage-android
+  install: "implementation 'com.joinforage:forage-android:4.2.2'"
+  official: true
+  repo: https://github.com/teamforage/forage-android-sdk
+  description: Forage Android SDK for accepting online-only and POS Terminal EBT SNAP
+    payments in Android apps.
+- language: swift
+  registry: cocoapods
+  name: ForageSDK
+  url: https://cocoapods.org/pods/ForageSDK
+  install: "pod 'ForageSDK'"
+  official: true
+  repo: https://github.com/teamforage/forage-ios-sdk
+  description: Forage iOS SDK (Swift) providing Forage Elements and methods to securely
+    process EBT payments; also available via Swift Package Manager.
+- language: swift
+  registry: swift-package-manager
+  name: forage-ios-sdk
+  url: https://github.com/teamforage/forage-ios-sdk
+  install: ".package(url: \"https://github.com/teamforage/forage-ios-sdk\", from: \"\
+    <version>\")"
+  official: true
+  description: Forage iOS SDK distributed via Swift Package Manager.

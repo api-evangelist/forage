@@ -1,0 +1,31 @@
+generated: '2026-07-19'
+method: searched
+note: >-
+  Probed the /.well-known/ discovery surface on the Forage docs, API, and website
+  hosts on 2026-07-19. No documents were served (all 404). Recorded as valid
+  negative results — no fabricated catalog.
+hosts:
+- host: https://docs.joinforage.app
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+- host: https://api.joinforage.app
+  documents:
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/oauth-authorization-server
+    status: 404
+- host: https://www.joinforage.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 404

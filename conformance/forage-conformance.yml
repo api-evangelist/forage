@@ -1,0 +1,28 @@
+generated: '2026-07-19'
+method: searched
+source: https://docs.joinforage.app/reference/introduction
+standards:
+- id: oauth2
+  conforms: true
+  evidence: Authentication uses OAuth 2.0 bearer tokens (authentication + session
+    tokens) per docs.joinforage.app/docs/authentication.
+- id: idempotency
+  conforms: true
+  evidence: POST create endpoints accept an Idempotency-Key header with 24h retention
+    (docs.joinforage.app/reference/idempotency).
+- id: cursor-pagination
+  conforms: true
+  evidence: Reporting endpoints migrated to cursor-based pagination in version
+    2024-02-15.
+- id: pci-dss
+  conforms: true
+  evidence: Website states a PCI-compliant fraud layer; public Trust Center at
+    trust.joinforage.app.
+- id: usda-fns-ebt
+  conforms: true
+  evidence: One of three payment processors approved by the USDA Food and Nutrition
+    Service (FNS) to process online EBT payments.
+- id: rfc9457-problem-details
+  conforms: false
+  evidence: Errors use a Forage-specific envelope ({path, errors[]}), not
+    application/problem+json.

@@ -1,0 +1,57 @@
+generated: '2026-07-19'
+method: searched
+source: https://docs.joinforage.app/reference/introduction
+authentication:
+  style: oauth2-bearer
+  detail: OAuth 2.0 bearer tokens (long-lived authentication token for server-side,
+    15-minute session token for client-side) in the HTTP Authorization header.
+  ref: authentication/forage-authentication.yml
+idempotency:
+  supported: true
+  header: Idempotency-Key
+  docs: https://docs.joinforage.app/reference/idempotency
+  scope: POST requests that create Sessions, Orders, Payments, and Refunds
+  key_format: Deterministic string; Forage recommends a UUID of the related backend
+    object (e.g. 75c34048-f166-4bf7-8447-2bbd39ff9ebe).
+  retention: 24 hours (keys expire after 24h; do not retry beyond that window)
+  behavior: On a duplicate request with a matching body and Idempotency-Key, the API
+    serves a cached response. Changing the body requires a new Idempotency-Key.
+  excluded: GET and DELETE (idempotent by definition)
+pagination:
+  style: cursor
+  detail: Reporting endpoints use cursor-based pagination (migrated from offset in
+    version 2024-02-15).
+  applies_to: /reporting/* endpoints
+versioning:
+  style: date-based-header
+  scheme: YYYY-MM-DD version names, per-endpoint versioning
+  current: '2025-08-04'
+  docs: https://docs.joinforage.app/reference/version-history
+  ref: lifecycle/forage-lifecycle.yml
+error_envelope:
+  shape: |
+    {
+      "path": "/api/<endpoint>/",
+      "errors": [
+        {
+          "code": "<error_code>",
+          "message": "<human-readable description>",
+          "source": { "resource": "<resource type>", "ref": "<resource reference>" }
+        }
+      ]
+    }
+  ref: errors/forage-problem-types.yml
+rate_limiting:
+  signal: HTTP 429 with too_many_requests error code
+  limit: 900 requests per 5-minute span per IP address (~3 requests/second)
+  docs: https://docs.joinforage.app/reference/request-limits
+tracing:
+  request_reference: Objects are referenced by hashed `ref` values (payment_method_ref,
+    order_ref, payment_ref, refund_ref) returned on create and used as path params.
+customer_identity:
+  field: customer_id
+  detail: Strongly recommended on PaymentMethod, Payment, and Session creation to
+    speed processing, reuse stored payment methods, and throttle card-add abuse.
+webhooks:
+  supported: true
+  ref: asyncapi/forage-webhooks.yml

@@ -1,0 +1,68 @@
+generated: '2026-07-19'
+method: derived
+source: https://docs.joinforage.app/reference/introduction
+note: >-
+  Entity graph derived from the Forage API object reference (no public OpenAPI).
+  Objects are referenced by hashed `ref` values used as path parameters.
+entities:
+- name: PaymentMethod
+  ref_field: payment_method_ref
+  description: A customer's tokenized payment instrument (EBT card or HSA/FSA card),
+    with balance after a PIN-secured inquiry.
+- name: Payment
+  ref_field: payment_ref
+  description: A one-time charge against a PaymentMethod (SDK / HSA-FSA flows). Expires
+    30 minutes after creation if not captured.
+- name: PaymentRefund
+  ref_field: refund_ref
+  description: A refund of an existing Payment.
+- name: Session
+  ref_field: ref
+  description: A Fully Hosted or Custom checkout / balance-check / capture UI session;
+    creates an Order.
+- name: Order
+  ref_field: order_ref
+  description: A shopping-cart order (Fully Hosted / Custom integrations) with a
+    product_list and one or more OrderPayments.
+- name: OrderPayment
+  ref_field: payment_ref
+  description: A payment associated with an Order.
+- name: OrderRefund
+  ref_field: refund_ref
+  description: A refund of an OrderPayment (full, partial, or by product).
+- name: Report
+  description: Transaction, order, payout, and payout-transaction reconciliation
+    reports.
+relationships:
+- from: Payment
+  to: PaymentMethod
+  type: belongs_to
+  via: payment_method
+- from: PaymentRefund
+  to: Payment
+  type: belongs_to
+  via: payment_ref
+- from: Session
+  to: Order
+  type: has_one
+  via: ref
+- from: Order
+  to: OrderPayment
+  type: has_many
+  via: order_ref
+- from: OrderPayment
+  to: Order
+  type: belongs_to
+  via: order_ref
+- from: OrderRefund
+  to: OrderPayment
+  type: belongs_to
+  via: refund_ref
+- from: Order
+  to: OrderRefund
+  type: has_many
+  via: order_ref
+- from: OrderPayment
+  to: PaymentMethod
+  type: belongs_to
+  via: payment_method

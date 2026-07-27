@@ -1,8 +1,26 @@
 aid: forage
 name: Forage
-description: Forage is a company surfaced as a portfolio company of lightspeed-venture-partners and added
-  to the API Evangelist network as a stub for enrichment. This profile is a lead awaiting the enrichment
-  pipeline.
+description: Forage is a mission-driven payments company and one of only three payment
+  processors approved by the USDA Food and Nutrition Service (FNS) to accept SNAP EBT
+  and EBT Cash online. Forage gives grocery retailers, marketplaces, and platforms the
+  API, SDKs, and regulatory expertise to add government-benefit tender (SNAP, EBT Cash,
+  and HSA/FSA) to online and in-store checkout. The Forage Payments API tokenizes EBT
+  cards, runs PIN-secured balance inquiries, and creates, captures, voids, and refunds
+  EBT payments and orders, backed by JavaScript, iOS, Android, and POS Terminal SDKs,
+  webhooks for order/payment/refund events, and daily CSV reconciliation reports.
+accessModel:
+  pricing: unknown
+  onboarding: self-serve
+  trial: false
+  try_now: false
+  public: false
+  label: Self-serve signup
+  confidence: medium
+  source:
+  - authentication
+  generated: '2026-07-22'
+  method: derived
+image: https://framerusercontent.com/assets/ZoPlyiuvY1BwAuHbWMWp7HW8UmE.png
 url: https://raw.githubusercontent.com/api-evangelist/forage/refs/heads/main/apis.yml
 x-type: company
 x-source: vc-portfolio
@@ -12,12 +30,113 @@ x-tier: stub
 x-tier-reason: portfolio-lead
 specificationVersion: '0.20'
 created: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-19'
 tags:
 - Company
-apis: []
+- Payments
+- EBT
+- SNAP
+- EBT Cash
+- HSA/FSA
+- Fintech
+- Government Benefits
+- Grocery
+- Checkout
+- Financial Services
+apis:
+- name: Forage EBT SNAP Payments API
+  description: REST API to tokenize EBT cards, run PIN-secured balance inquiries, and
+    create, capture, void, and refund EBT SNAP, EBT Cash, and HSA/FSA payments and orders
+    for online and in-store checkout.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Payments
+  - EBT
+  - SNAP
+  properties:
+  - type: Documentation
+    url: https://docs.joinforage.app/docs/overview
+  - type: APIReference
+    url: https://docs.joinforage.app/reference/introduction
+  - type: Sandbox
+    url: https://api.sandbox.joinforage.app
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
+common:
+- type: DomainSecurity
+  url: security/forage-domain-security.yml
+- type: Website
+  url: https://www.joinforage.com
+- type: DeveloperPortal
+  url: https://docs.joinforage.app/docs/overview
+- type: Documentation
+  url: https://docs.joinforage.app/docs/overview
+- type: APIReference
+  url: https://docs.joinforage.app/reference/introduction
+- type: GettingStarted
+  url: https://docs.joinforage.app/docs/setup
+- type: Support
+  url: https://www.joinforage.com/get-in-touch
+- type: Blog
+  url: https://www.joinforage.com/blog
+- type: GitHubOrganization
+  url: https://github.com/teamforage
+- type: Pricing
+  url: https://www.joinforage.com/pricing
+- type: SignUp
+  url: https://www.joinforage.com/get-in-touch
+- type: TermsOfService
+  url: https://www.joinforage.com/pages/terms-of-use
+- type: PrivacyPolicy
+  url: https://www.joinforage.com/pages/privacy
+- type: StatusPage
+  url: https://status.joinforage.app
+- type: ChangeLog
+  url: changelog/forage-changelog.yml
+- type: Deprecation
+  url: lifecycle/forage-lifecycle.yml
+- type: Lifecycle
+  url: lifecycle/forage-lifecycle.yml
+- type: Authentication
+  url: authentication/forage-authentication.yml
+- type: Idempotency
+  url: conventions/forage-conventions.yml
+- type: Conventions
+  url: conventions/forage-conventions.yml
+- type: RateLimits
+  url: https://docs.joinforage.app/reference/request-limits
+- type: MCPServer
+  url: mcp/forage-mcp.yml
+- type: LLMsTxt
+  url: llms/forage-llms.txt
+- type: Packages
+  url: packages/forage-packages.yml
+- type: SDKs
+  url: packages/forage-packages.yml
+- type: Components
+  url: components/forage-components.yml
+- type: Webhooks
+  url: asyncapi/forage-webhooks.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: ErrorCatalog
+  url: errors/forage-problem-types.yml
+- type: DeclineCodes
+  url: errors/forage-decline-codes.yml
+- type: DataModel
+  url: data-model/forage-data-model.yml
+- type: Conformance
+  url: conformance/forage-conformance.yml
+- type: Compliance
+  url: https://trust.joinforage.app/
+- type: TrustCenter
+  url: security/forage-trust-center.yml
+x-enrichment:
+  date: '2026-07-19'
+  status: backfilled
+  pass: local-v1
+  note: backfilled from .gitignore signal + verified work evidence

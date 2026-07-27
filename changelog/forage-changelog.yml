@@ -1,0 +1,44 @@
+generated: '2026-07-19'
+method: searched
+source: https://docs.joinforage.app/reference/changelog
+scheme: date-based (YYYY-MM-DD version names)
+current: '2025-08-04'
+entries:
+- version: '2025-08-04'
+  date: '2025-08-04'
+  breaking: true
+  highlights: Removed redundant fields (snap_total, ebt_cash_total, remaining_total)
+    from Order and SessionRequest schemas.
+- version: '2025-01-14'
+  date: '2025-01-14'
+  breaking: false
+  highlights: Added transaction-adjustment visibility (total_void_purchases,
+    total_void_refunds); split transaction_type to add a payment_method field;
+    item-level refunds and product-level tender breakdown.
+- version: '2024-08-30'
+  date: '2024-08-30'
+  breaking: true
+  highlights: Restructured payout reporting to show ACH disbursement detail; field
+    renames merchant_fns_number to fns_id and fee to forage_fee.
+- version: '2024-05-07'
+  date: '2024-05-07'
+  breaking: false
+  highlights: Standardized all timestamps to UTC.
+- version: '2024-03-05'
+  date: '2024-03-05'
+  breaking: true
+  highlights: Replaced snap_total/ebt_cash_total with a payment_details object; added
+    PATCH endpoint to update OrderPayments.
+- version: '2024-02-15'
+  date: '2024-02-15'
+  breaking: true
+  highlights: Migrated reporting endpoints from offset to cursor-based pagination.
+- version: '2024-01-08'
+  date: '2024-01-08'
+  breaking: false
+  highlights: Refund endpoints now return synchronous responses with receipt data.
+- version: '2023-05-15'
+  date: '2023-05-15'
+  breaking: false
+  highlights: Introduced customer_id, psp_customer_id, and external_order_id; made
+    balance checks conditional on customer_id.

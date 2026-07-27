@@ -1,0 +1,32 @@
+generated: '2026-07-19'
+method: generated
+source: https://docs.joinforage.app/reference/introduction
+note: >-
+  Skills grounded in the documented Forage Payments API endpoints (no public
+  OpenAPI). Every operation path is verifiable in the API reference.
+skills:
+- file: forage-accept-ebt-payment.md
+  name: Accept an EBT SNAP payment (SDK / Custom)
+  api: https://docs.joinforage.app/reference/introduction
+  operations:
+  - 'POST /o/token/'
+  - 'POST /session_token/'
+  - 'POST /payment_methods/'
+  - 'GET /payment_methods/{payment_method_ref}/'
+  - 'POST /payments/'
+  - 'POST /payments/{payment_ref}/capture_payment/'
+- file: forage-refund-ebt-payment.md
+  name: Refund an EBT SNAP payment
+  api: https://docs.joinforage.app/reference/payment-refunds
+  operations:
+  - 'POST /payments/{payment_ref}/refunds/'
+  - 'GET /payments/{payment_ref}/refunds/{refund_ref}/'
+  - 'GET /payments/{payment_ref}/refunds/'
+- file: forage-fully-hosted-checkout.md
+  name: Run a Fully Hosted EBT checkout
+  api: https://docs.joinforage.app/docs/fully-hosted
+  operations:
+  - 'POST /o/token/'
+  - 'POST /sessions/'
+  - 'GET /orders/{order_ref}/'
+  - 'POST /orders/{order_ref}/refund_all/'

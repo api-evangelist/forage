@@ -1,0 +1,36 @@
+generated: '2026-07-19'
+method: searched
+source: https://docs.joinforage.app/docs/webhooks-event-reference
+spec_type: Webhooks
+description: >-
+  Forage delivers real-time webhook events for merchant onboarding, payments,
+  refunds, and orders. Endpoints are registered in the Forage dashboard; deliveries
+  are signed for verification and originate from a fixed set of source IPs.
+registration: Forage dashboard (https://dashboard.joinforage.app/)
+delivery_ips:
+  production: [54.71.62.121, 35.81.99.127]
+  sandbox: [35.84.122.17, 44.232.107.207]
+events:
+- name: MERCHANT_ONBOARDING_SUBMITTED
+  trigger: An onboarding merchant completed the Onboarding UI and submitted their
+    information.
+  resource: Merchant onboarding
+- name: MERCHANT_ONBOARDING_VERIFICATION_FAILED
+  trigger: FNS number validation fails.
+  resource: Merchant onboarding
+- name: MERCHANT_ONBOARDING_LIVE
+  trigger: Forage successfully verified and onboarded the merchant.
+  resource: Merchant onboarding
+- name: PAYMENT_STATUS_UPDATED
+  trigger: An EBT SNAP or EBT Cash payment status changes (succeeded, failed, canceled).
+  resource: Payment
+- name: REFUND_STATUS_UPDATED
+  trigger: A refund status is updated (succeeded, failed, canceled).
+  resource: Refund
+- name: ORDER_STATUS_UPDATED
+  trigger: An Order status changes (Fully Hosted / Custom integrations only).
+  resource: Order
+docs:
+  overview: https://docs.joinforage.app/docs/configure-webhooks
+  concepts: https://docs.joinforage.app/docs/webhooks-concepts
+  configure: https://docs.joinforage.app/docs/webhooks-configure

@@ -1,0 +1,22 @@
+generated: '2026-07-19'
+method: searched
+probe: true
+url: https://trust.joinforage.app/
+description: >-
+  Forage operates a public Trust Center (trust.joinforage.app) linked from the
+  website Security section. The Trust Center is a client-rendered portal; specific
+  certification names were not machine-readable from the page. The Forage website
+  states a PCI-compliant fraud layer protects transactions.
+compliance_claims:
+- PCI-compliant fraud layer (source: https://www.joinforage.com/)
+evidence:
+- source: https://trust.joinforage.app/
+  kind: trust-center
+  status: 200
+- source: https://www.joinforage.com/
+  kind: website-security-section
+  claim: PCI-compliant fraud layer
+notes: >-
+  Named certifications (e.g. SOC 2, ISO 27001) were not confirmed verbatim from
+  the trust portal and are intentionally not asserted here. Re-run to enrich if
+  the portal exposes a machine-readable certification list.

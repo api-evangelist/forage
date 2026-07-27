@@ -1,0 +1,26 @@
+generated: '2026-07-19'
+method: searched
+source: https://docs.joinforage.app/reference/version-history
+versioning:
+  scheme: date-based (YYYY-MM-DD), per-endpoint versioning
+  current: '2025-08-04'
+  default_since: '2025-09-19'
+  header: API version selected per request; individual endpoints may support different
+    versions.
+  docs: https://docs.joinforage.app/reference/version-history
+deprecation:
+  policy: >-
+    Forage publishes dated API versions and documents breaking changes per version
+    in the changelog. Newer versions supersede older ones; older versions remain
+    supported until deprecated. Callers pin a version and migrate on breaking releases.
+  docs: https://docs.joinforage.app/reference/changelog
+  breaking_versions:
+  - '2025-08-04'
+  - '2024-08-30'
+  - '2024-03-05'
+  - '2024-02-15'
+sla:
+  uptime_target: '99.9%'
+  source: https://www.joinforage.com/
+status_page: https://status.joinforage.app
+changelog: changelog/forage-changelog.yml

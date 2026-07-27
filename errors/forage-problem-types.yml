@@ -1,0 +1,95 @@
+generated: '2026-07-19'
+method: searched
+source: https://docs.joinforage.app/reference/errors
+format: forage-error-envelope
+envelope: |
+  {
+    "path": "/api/<endpoint>/",
+    "errors": [
+      { "code": "<error_code>", "message": "<description>",
+        "source": { "resource": "<resource type>", "ref": "<resource reference>" } }
+    ]
+  }
+http_statuses:
+- status: 200
+  meaning: OK — request succeeded
+- status: 201
+  meaning: Created — resource successfully created
+- status: 204
+  meaning: No Content — success with no response body
+- status: 400
+  meaning: Bad Request — check request body against documentation
+- status: 401
+  meaning: Unauthorized — verify authentication credentials
+- status: 403
+  meaning: Forbidden — confirm authorization and credentials
+- status: 404
+  meaning: Not Found — verify resource reference is correct
+- status: 423
+  meaning: Locked — retry with exponential backoff
+- status: 429
+  meaning: Too Many Requests — respect rate limits and retry later
+- status: 50X
+  meaning: Server Error — retry with exponential backoff
+problems:
+- code: invalid_token
+  status: 401
+  title: Authentication credentials invalid
+  remediation: Provide valid credentials / regenerate a token.
+- code: expired_session_token
+  status: 401
+  title: Session token expired
+  remediation: Generate a new session token via POST /session_token/.
+- code: resource_not_found
+  status: 404
+  title: Resource does not exist
+  remediation: Verify the resource reference and FNS number.
+- code: invalid_input_data
+  status: 400
+  title: Validation errors
+  remediation: Review the request against the endpoint specification.
+- code: missing_merchant_account
+  status: 400
+  title: Merchant-Account header missing
+  remediation: Add the Merchant-Account header (required for HSA/FSA and credit/debit).
+- code: too_many_requests
+  status: 429
+  title: Rate limit exceeded
+  remediation: Wait before retrying; limit is 900 requests / 5 min per IP.
+- code: resource_locked
+  status: 423
+  title: Resource temporarily unavailable
+  remediation: Retry with exponential backoff.
+custom_integration_errors:
+  source: https://docs.joinforage.app/reference/custom-errors
+  problems:
+  - code: cannot_cancel_order
+    title: Order not in draft/failed state
+  - code: cannot_capture_order
+    title: Order not in draft/failed state
+  - code: cannot_update_order
+    title: Order is canceled
+  - code: different_ebt_card
+    title: Multiple EBT cards used on the same order
+  - code: duplicate_funding_type
+    title: Duplicate payment funding type
+  - code: exceeds_ebt_cash_total
+    title: EBT Cash payments exceed limit
+  - code: exceeds_snap_total
+    title: SNAP payments exceed limit
+  - code: invalid_customer_id
+    title: Processor cannot identify customer
+  - code: order_already_refunded
+    title: Order fully refunded already
+  - code: order_is_cancelled
+    title: Cannot add payments to a canceled order
+  - code: order_not_succeeded
+    title: Cannot refund a non-succeeded order
+  - code: refund_exceeds_order_total
+    title: Refund amount too large
+  - code: wait_for_batch_refund
+    title: Active refunds pending
+  - code: wrong_payment_total
+    title: Payment amounts do not match order total
+related:
+  decline_codes: errors/forage-decline-codes.yml

@@ -5,22 +5,25 @@ source: https://docs.joinforage.app/docs/mcp-tools-reference
 server:
   name: Forage docs MCP server
   transport: mcp
-  description: Official Forage documentation MCP server. Exposes the Forage Payments
-    API surface to AI tools and can execute live API calls against the real Forage
-    API with OAuth credentials.
+  description: Official Forage documentation MCP server. Exposes the Forage Payments API surface to AI
+    tools and can execute live API calls against the real Forage API with OAuth credentials.
   connect_docs: https://docs.joinforage.app/docs/developer-resources
 tools:
 - name: list-endpoints
-  description: Returns the complete API surface with every path grouped by resource
-    and a summary of each method.
+  description: Returns the complete API surface with every path grouped by resource and a summary of each
+    method.
 - name: search-endpoints
-  description: Keyword search across API paths, summaries, and parameters to locate
-    related endpoints.
+  description: Keyword search across API paths, summaries, and parameters to locate related endpoints.
 - name: get-endpoint
-  description: Returns the full request/response schema, error catalog, and a working
-    code sample for a specific endpoint.
+  description: Returns the full request/response schema, error catalog, and a working code sample for
+    a specific endpoint.
 - name: get-server-variables
   description: Supplies the sandbox and production base URLs for environment configuration.
 - name: execute-request
-  description: Executes live API calls against the real Forage API (requires OAuth
-    credentials).
+  description: Executes live API calls against the real Forage API (requires OAuth credentials).
+deployment:
+  mode: unclear
+  verified: searched
+  tools: 5
+  checked: '2026-08-12'
+  source: catalog MCP census

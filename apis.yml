@@ -42,6 +42,18 @@ tags:
 - Government Benefits
 - Grocery
 - Checkout
+- Financial-Services
+tags_raw:
+- Company
+- Payments
+- EBT
+- SNAP
+- EBT Cash
+- HSA/FSA
+- Fintech
+- Government Benefits
+- Grocery
+- Checkout
 - Financial Services
 apis:
 - name: Forage EBT SNAP Payments API

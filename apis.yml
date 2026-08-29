@@ -8,6 +8,17 @@ description: Forage is a mission-driven payments company and one of only three p
   cards, runs PIN-secured balance inquiries, and creates, captures, voids, and refunds
   EBT payments and orders, backed by JavaScript, iOS, Android, and POS Terminal SDKs,
   webhooks for order/payment/refund events, and daily CSV reconciliation reports.
+deliveryModel:
+  model: saas
+  open_source: false
+  commercial: true
+  callable_host: false
+  label: Hosted service · you call their endpoint
+  confidence: medium
+  source:
+  - pricing
+  generated: '2026-08-28'
+  method: derived
 accessModel:
   pricing: unknown
   onboarding: self-serve

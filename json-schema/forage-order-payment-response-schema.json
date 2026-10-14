@@ -1,0 +1,215 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/forage/main/json-schema/forage-order-payment-response-schema.json",
+  "title": "OrderPaymentResponse",
+  "x-generated": "2026-10-14",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/forage-payments-api-openapi.yml#/components/schemas/OrderPaymentResponse",
+  "allOf": [
+    {
+      "$ref": "#/$defs/OrderPaymentRequest"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string",
+          "description": "A unique reference hash for the Forage `OrderPayment` object.\n\n_Note:_ `receipt.ref_number` equals `ref`.\n"
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the `OrderPayment`. One of:\n\n- `authorized`: The `OrderPayment` has been authorized, but not yet captured. Only applicable to HSA/FSA payments, which use an authorize-then-capture flow.\n- `canceled`: The `OrderPayment` object can't be used.\n- `failed`: If the error is temporary, then this `OrderPayment` can be resubmitted for capture without modification. Check the `receipt.message` field for a description of the error.\n- `processing`: The outcome of the `OrderPayment` is pending.\n- `requires_confirmation`: The `OrderPayment` hasn't been submitted for processing.\n- `succeeded`: The `OrderPayment` has been successfully processed and will be included in settlement. It can't be changed.\n",
+          "enum": [
+            "authorized",
+            "canceled",
+            "failed",
+            "processing",
+            "requires_confirmation",
+            "succeeded"
+          ]
+        },
+        "last_processing_error": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "The code and message values corresponding to the most recent [Payments API error](https://docs.joinforage.app/reference/errors#payments-api-errors).",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A UTC timestamp, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string, of when the `OrderPayment` was created."
+        },
+        "updated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A UTC timestamp, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string, of when the `OrderPayment` was last modified."
+        },
+        "success_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "description": "A UTC timestamp, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string, of when the `status` of the `OrderPayment` is `succeeded`. This value is always `null` when the `OrderPayment` is first created."
+        },
+        "tpp_lookup_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "This value is always null for `OrderPayments` resulting from Custom Sessions. It’s most relevant to Fully Hosted Sessions, which process credit/debit payments.\n\nA value that merchants can use to associate this payment with a credit/debit payment processed by a third party processor.\n\nFor Stripe integrations, this is the client secret for a [`PaymentIntent`](https://stripe.com/docs/api/payment_intents).\n"
+        },
+        "order": {
+          "type": "string",
+          "description": "A unique reference hash for the parent `Order`, as passed in the request to create the `OrderPayment`."
+        },
+        "merchant": {
+          "type": "string",
+          "description": "The FNS (Food and Nutrition Service) number of the merchant associated with this `OrderPayment`."
+        },
+        "amount": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "decimal",
+          "description": "The amount charged to the payment method, in USD. Null until the payment is captured."
+        },
+        "merchant_fixed_settlement": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "decimal",
+          "description": "The fixed amount in USD restored to the merchant from EBT Cash payments before the `platform_fee` split. Null when not set."
+        },
+        "platform_fixed_settlement": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "decimal",
+          "description": "The fixed amount in USD the platform takes from EBT Cash payments before the `platform_fee` split. Null when not set."
+        },
+        "external_location_id": {
+          "nullable": true,
+          "description": "A unique identifier, provided by the merchant or platform (not Forage), that indicates the physical fulfillment location for the order. Null when not provided."
+        }
+      },
+      "required": [
+        "ref",
+        "order",
+        "merchant",
+        "status",
+        "created",
+        "updated"
+      ]
+    }
+  ],
+  "$defs": {
+    "CustomerIDField": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "**⚠️ If you’re integrating Forage with a POS Terminal, then do not use this param. It is only supported for online transactions.**\n\nA unique identifier for the end customer making the payment.\n\nForage automatically adds the `customer_id` to the Session's corresponding `Order` and `OrderPayments`.\n\nThis field helps Forage's servers more quickly identify the customer associated with the request. While `customer_id` is not technically required, if you omit it then requests could take longer to process. **It is strongly recommended to pass customer_id.**\n\nIf you're providing your internal customer ID, then we recommend that you hash the value before sending it on the payload.\n\nEach customer should only have one unique `customer_id`. For example, if you create both a `PaymentMethod` and a Forage `Session` (Fully Hosted or Custom) or `Payment` (SDK) for the same customer, then the `customer_id` should be the same in both requests to ensure continuity of stored payment methods.\n"
+    },
+    "ExternalLocationIDField": {
+      "type": "string",
+      "description": "A unique identifier, provided by the merchant or platform (not Forage), that indicates the physical fulfillment location for the order. For example, this field could specify which location of a grocery store chain fulfilled an order.\n"
+    },
+    "ExternalOrderIDField": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "A unique identifier for the order as created by the merchant or platform (not Forage).\n\nWhen a merchant or platform passes this order ID to Forage, it persists in each Forage transaction related to the `Order`. This field enables merchants to map order IDs in their system to corresponding Forage `Order` IDs.\n\n**You must build with Forage Version `2023-05-15` or later to use `external_order_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.\n"
+    },
+    "MetadataObject": {
+      "type": "object",
+      "description": "A required object containing merchant-defined key-value pairs to provide additional context for the payment.\n\nMerchants should use this field to store **reference information** relevant to the transaction (for example, order details, system identifiers, or tracking data). This helps link the payment to records within their system.\n\nPass an empty object (`{}`) if no additional information is available.\n\n> ⚠️ Personally Identifiable Information\n>\n> **Do not include personally identifiable information (PII)** such as names, emails, or payment details.\n"
+    },
+    "OrderPaymentRequest": {
+      "type": "object",
+      "description": "This object represents a one-time payment, charged to a single payment method, associated with a specific Forage Order.",
+      "properties": {
+        "funding_type": {
+          "type": "string",
+          "description": "A string that represents the type of tender. One of:\n\n- `benefit`\n- `credit_tpp`\n- `ebt_cash`\n- `ebt_snap`\n",
+          "enum": [
+            "benefit",
+            "credit_payfac",
+            "credit_tpp",
+            "ebt_cash",
+            "ebt_snap",
+            "wic"
+          ],
+          "default": "ebt_snap"
+        },
+        "amount": {
+          "type": "string",
+          "format": "decimal",
+          "description": "A positive decimal number that represents how much to charge the `PaymentMethod` in USD. Precision is supported to the penny.\n\nThis value must match the `ebt_cash_total` or `snap_total` value that was passed in the request that [created the Custom Capture Session](https://docs.joinforage.app/reference/create-capture-session), depending on the `funding_type`.\n\nIf you need to charge both funding types, then create an `OrderPayment` for each charge, using the same `order_ref` returned when the order's parent [Payment Capture Session was created](https://docs.joinforage.app/reference/create-capture-session).\n\nThe minimum amount that can be charged is `0.01`.\n"
+        },
+        "description": {
+          "type": "string",
+          "description": "A string that describes the `OrderPayment`.",
+          "default": "An EBT payment"
+        },
+        "metadata": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MetadataObject"
+            },
+            {
+              "default": {}
+            }
+          ]
+        },
+        "payment_method": {
+          "type": "string",
+          "description": "The unique reference hash for the existing Forage [`PaymentMethod`](https://docs.joinforage.app/reference/payment-methods) that is to be charged in this transaction.",
+          "default": "b16673fe21"
+        },
+        "customer_id": {
+          "$ref": "#/$defs/CustomerIDField"
+        },
+        "external_order_id": {
+          "$ref": "#/$defs/ExternalOrderIDField"
+        },
+        "merchant_fixed_settlement": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "decimal",
+          "description": "The fixed amount in USD that should be restored to the merchant from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny.\n"
+        },
+        "platform_fixed_settlement": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "decimal",
+          "description": "The fixed amount in USD that should be restored to the platform from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny.\n"
+        },
+        "external_location_id": {
+          "$ref": "#/$defs/ExternalLocationIDField"
+        }
+      },
+      "required": [
+        "funding_type",
+        "amount",
+        "description",
+        "metadata",
+        "payment_method"
+      ]
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/forage/main/json-schema/forage-error-response-object-schema.json",
+  "title": "ErrorResponseObject",
+  "description": "An object that includes details about the error.",
+  "x-generated": "2026-10-14",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/forage-payments-api-openapi.yml#/components/schemas/ErrorResponseObject",
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "description": "The requested endpoint."
+    },
+    "errors": {
+      "$ref": "#/$defs/ErrorsArray"
+    }
+  },
+  "$defs": {
+    "ErrorsArray": {
+      "type": "array",
+      "description": "An array with information about the error.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "A short string that represents the error."
+          },
+          "message": {
+            "type": "string",
+            "description": "A developer-facing message with more details about the error, not to be displayed to customers."
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "resource": {
+                "type": "string",
+                "description": "The type of the Forage resource involved in the error."
+              },
+              "ref": {
+                "type": "string",
+                "description": "If applicable, the ten character reference hash of the Forage resource that caused the error. An empty string if no specific individual resource was involved."
+              }
+            }
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional details about the error, if applicable."
+          }
+        }
+      }
+    }
+  }
+}

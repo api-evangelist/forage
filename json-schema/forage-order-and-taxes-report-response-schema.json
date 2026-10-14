@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/forage/main/json-schema/forage-order-and-taxes-report-response-schema.json",
+  "title": "OrderAndTaxesReportResponse",
+  "x-generated": "2026-10-14",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/forage-payments-api-openapi.yml#/components/schemas/OrderAndTaxesReportResponse",
+  "allOf": [
+    {
+      "$ref": "#/$defs/PaginatedReportCommonFields"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "next": {},
+        "previous": {},
+        "results": {
+          "type": "array",
+          "description": "An array of objects that detail information about each `Order` during the provided reporting period.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "ref": {
+                "type": "string",
+                "description": "A unique reference hash for the Forage `Order` object."
+              },
+              "status": {
+                "type": "string",
+                "description": "The status of the order in the Forage lifecycle. One of:\n\n- `canceled`\n- `draft`\n- `failed`\n- `processing`\n- `succeeded`\n",
+                "enum": [
+                  "canceled",
+                  "draft",
+                  "failed",
+                  "processing",
+                  "succeeded"
+                ]
+              },
+              "snap_eligible_total": {
+                "type": "string",
+                "format": "decimal",
+                "description": "The SNAP-only eligible portion of the order cost in USD."
+              },
+              "ebt_cash_eligible_total": {
+                "type": "string",
+                "format": "decimal",
+                "description": "The EBT Cash-only eligible portion of the order cost in USD."
+              },
+              "remaining_total": {
+                "type": "string",
+                "format": "decimal",
+                "description": "The portion of the `Order` total, in USD, that is neither SNAP eligible nor EBT Cash eligible. This amount must be charged to a credit or debit card."
+              },
+              "sales_tax_applied": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "decimal",
+                "description": "The amount of sales tax that Forage added to the order total, calculated after the customer distributed tender across payment methods.\n\nThis value is always `0` for Custom integrations. Forage only calculates taxes for Fully Hosted integrations.\n\nIf the value is nonzero, then some of the `ebt_cash_paid` or `credit_debit_paid` amount covered taxes. Per FNS regulations, `snap_paid` is tax-exempt. The sum of (`snap_paid`, `ebt_cash_paid`, `credit_debit_paid`) should always equal the sum of (`sales_tax_applied`, `snap_eligible_total`, `remaining_total`).\n\n_The value of this field is `null` if the `status` of the `Order` is not `succeeded` or `failed`_.\n"
+              },
+              "snap_paid": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "decimal",
+                "description": "The portion of the order cost in USD that the customer paid for with SNAP benefits.\n\n_The value of this field is `null` if the `status` of the `Order` is not `succeeded` or `failed`_.\n"
+              },
+              "ebt_cash_paid": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "decimal",
+                "description": "The portion of the order cost in USD that the customer paid for with EBT Cash benefits.\n\n_The value of this field is `null` if the `status` of the `Order` is not `succeeded` or `failed`_.\n"
+              },
+              "credit_debit_paid": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "decimal",
+                "description": "The portion of the order cost in USD that the customer paid for with credit/debit card.\n\n_The value of this field is `null` if the `status` of the `Order` is not `succeeded` or `failed`_.\n"
+              },
+              "merchant_fns_number": {
+                "type": "string",
+                "description": "The FNS number of the merchant that created this order."
+              },
+              "created": {
+                "type": "string",
+                "format": "date-time",
+                "description": "A UTC timestamp of when the `Order` was created, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string."
+              },
+              "success_date": {
+                "type": "string",
+                "format": "date-time",
+                "description": "A UTC timestamp of when all `OrderPayments` associated with the `Order` were successfully processed, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string."
+              },
+              "payments": {
+                "type": "array",
+                "description": "An array of the unique reference hashes for any Forage `OrderPayments` associated with the `Order`.",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "refunds": {
+                "type": "array",
+                "description": "An array of the unique reference hashes for any Forage `OrderRefunds` associated with the `Order`.",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "psp_customer_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "The third-party credit/debit payment processor’s unique identifier for the customer.\n\n_The value of this field is null if the `Order` was created via a POST to `/capture_sessions/`_\n\n**You must build with Forage Version `2023-05-15` or later to use `psp_customer_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.\n"
+              },
+              "external_order_id": {
+                "$ref": "#/$defs/ExternalOrderIDField"
+              },
+              "external_location_id": {
+                "$ref": "#/$defs/ExternalLocationIDField"
+              }
+            }
+          },
+          "required": [
+            "ref",
+            "status",
+            "snap_eligible_total",
+            "ebt_cash_eligible_total",
+            "remaining_total",
+            "sales_tax_applied",
+            "snap_paid",
+            "ebt_cash_paid",
+            "credit_debit_paid",
+            "merchant_fns_number",
+            "created",
+            "payments",
+            "refunds",
+            "psp_customer_id"
+          ]
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "ExternalLocationIDField": {
+      "type": "string",
+      "description": "A unique identifier, provided by the merchant or platform (not Forage), that indicates the physical fulfillment location for the order. For example, this field could specify which location of a grocery store chain fulfilled an order.\n"
+    },
+    "ExternalOrderIDField": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "A unique identifier for the order as created by the merchant or platform (not Forage).\n\nWhen a merchant or platform passes this order ID to Forage, it persists in each Forage transaction related to the `Order`. This field enables merchants to map order IDs in their system to corresponding Forage `Order` IDs.\n\n**You must build with Forage Version `2023-05-15` or later to use `external_order_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.\n"
+    },
+    "PaginatedReportCommonFields": {
+      "properties": {
+        "next": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "A URL that you can send a `GET` to in order to retrieve the next set of results. Alternatively, you can retrieve the `cursor` value from the URL and pass it in the body of a new request.\n\nThis value is `null` if there are no more results.\n"
+        },
+        "previous": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "A URL that you can send a `GET` to in order to retrieve the previous set of results. Alternatively, you can retrieve the `cursor` value from the URL and pass it in the body of a new request.\n\nThis value is `null` if the response includes the first set of results.\n"
+        }
+      }
+    }
+  }
+}

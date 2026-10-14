@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/forage/main/json-schema/forage-payment-refund-response-schema.json",
+  "title": "PaymentRefundResponse",
+  "x-generated": "2026-10-14",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/forage-payments-api-openapi.yml#/components/schemas/PaymentRefundResponse",
+  "allOf": [
+    {
+      "$ref": "#/$defs/PaymentRefundRequest"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string",
+          "description": "A unique reference hash for the `PaymentRefund`."
+        },
+        "payment_ref": {
+          "type": "string",
+          "description": "The unique reference hash for the `Payment` to be refunded, as passed in the path params of the request."
+        },
+        "funding_type": {
+          "type": "string",
+          "description": "A string that represents the type of tender. One of:\n\n- `benefit`\n- `credit_tpp`\n- `credit_payfac`\n- `ebt_cash`\n- `ebt_snap`\n- `wic`\n",
+          "enum": [
+            "ebt_snap",
+            "ebt_cash",
+            "credit_tpp",
+            "credit_payfac",
+            "benefit",
+            "wic"
+          ]
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A UTC timestamp that indicates when the `OrderRefund` was created, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string."
+        },
+        "updated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A UTC timestamp that indicates when the `OrderRefund` was last modified, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the refund. One of:\n\n- `canceled`: The `PaymentRefund` object can’t be used.\n- `expired`: The `PaymentRefund` has expired and can’t be used.\n- `failed`: Check `receipt.message` for a description of the error.\n- `processing`: The outcome of the refund is pending. _This status is not returned if you’re using Forage version `2024-01-08` or higher._\n- `requires_confirmation`: The `PaymentRefund` requires confirmation before it can be processed. Contact Forage support to confirm this refund.\n- `succeeded`: The refund has been successfully processed and will be included in settlement. It can’t be changed.\n",
+          "enum": [
+            "canceled",
+            "expired",
+            "failed",
+            "processing",
+            "requires_confirmation",
+            "succeeded"
+          ]
+        },
+        "last_processing_error": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "The `code` and `message` values corresponding to the most recent [Payments API error](https://docs.joinforage.app/reference/errors#payments-api-errors)."
+        },
+        "receipt": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Most of the information that you're required to display to the customer, according to FNS regulations.\n\nThis field is `null` if the data that populates the receipt is not yet available.\n\nThe total amount paid by the customer is `snap_amount` + `ebt_cash_amount` + `other_amount`. This amount will be settled with the merchant after applying Forage's fees.\n"
+        },
+        "sequence_number": {
+          "type": "string",
+          "description": "A unique sequence number for the transaction, emitted for POS Terminal refunds."
+        },
+        "previous_errors": {
+          "$ref": "#/$defs/ErrorsArray"
+        }
+      },
+      "required": [
+        "ref",
+        "payment_ref",
+        "funding_type",
+        "created",
+        "updated",
+        "status",
+        "amount",
+        "metadata"
+      ]
+    }
+  ],
+  "$defs": {
+    "ErrorsArray": {
+      "type": "array",
+      "description": "An array with information about the error.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "A short string that represents the error."
+          },
+          "message": {
+            "type": "string",
+            "description": "A developer-facing message with more details about the error, not to be displayed to customers."
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "resource": {
+                "type": "string",
+                "description": "The type of the Forage resource involved in the error."
+              },
+              "ref": {
+                "type": "string",
+                "description": "If applicable, the ten character reference hash of the Forage resource that caused the error. An empty string if no specific individual resource was involved."
+              }
+            }
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional details about the error, if applicable."
+          }
+        }
+      }
+    },
+    "ExternalOrderIDField": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "A unique identifier for the order as created by the merchant or platform (not Forage).\n\nWhen a merchant or platform passes this order ID to Forage, it persists in each Forage transaction related to the `Order`. This field enables merchants to map order IDs in their system to corresponding Forage `Order` IDs.\n\n**You must build with Forage Version `2023-05-15` or later to use `external_order_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.\n"
+    },
+    "MetadataObject": {
+      "type": "object",
+      "description": "A required object containing merchant-defined key-value pairs to provide additional context for the payment.\n\nMerchants should use this field to store **reference information** relevant to the transaction (for example, order details, system identifiers, or tracking data). This helps link the payment to records within their system.\n\nPass an empty object (`{}`) if no additional information is available.\n\n> ⚠️ Personally Identifiable Information\n>\n> **Do not include personally identifiable information (PII)** such as names, emails, or payment details.\n"
+    },
+    "PaymentRefundRequest": {
+      "type": "object",
+      "description": "This object represents a refund of a previously created Payment object. Funds will be refunded to the PaymentMethod originally charged.",
+      "properties": {
+        "amount": {
+          "type": "string",
+          "format": "decimal",
+          "description": "A positive decimal string representing the amount of the `Payment` to refund in USD. If a partial refund, then this value does not need to equal the `amount` field of the original `Payment`. Precision is supported to the penny.\n\nThe minimum amount that can be refunded is `0.01`.\n",
+          "default": "25.99"
+        },
+        "reason": {
+          "type": "string",
+          "description": "A string that describes why the `Payment` is to be refunded.",
+          "default": "Order could not be delivered"
+        },
+        "metadata": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/MetadataObject"
+            },
+            {
+              "default": {
+                "psp_customer_id": "cus_1234567890"
+              }
+            }
+          ]
+        },
+        "merchant_fixed_settlement": {
+          "type": "string",
+          "format": "decimal",
+          "description": "The fixed amount in USD that should be restored to the merchant from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny."
+        },
+        "platform_fixed_settlement": {
+          "type": "string",
+          "format": "decimal",
+          "description": "The fixed amount in USD that should be restored to the platform from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny."
+        },
+        "external_order_id": {
+          "$ref": "#/$defs/ExternalOrderIDField"
+        },
+        "pos_terminal": {
+          "type": "object",
+          "description": "⚠️  This param is required for POS Terminal refunds. It is not supported for online-only.\n\nAn object that details information about the POS Terminal that processed the payment.\n",
+          "properties": {
+            "provider_terminal_id": {
+              "type": "string",
+              "description": "A unique string that identifies the POS Terminal."
+            }
+          }
+        }
+      },
+      "required": [
+        "amount",
+        "reason",
+        "metadata"
+      ]
+    }
+  }
+}

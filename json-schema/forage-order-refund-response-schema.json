@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/forage/main/json-schema/forage-order-refund-response-schema.json",
+  "title": "OrderRefundResponse",
+  "x-generated": "2026-10-14",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/forage-payments-api-openapi.yml#/components/schemas/OrderRefundResponse",
+  "allOf": [
+    {
+      "$ref": "#/$defs/OrderRefundRequest"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string",
+          "description": "A unique reference hash for the `OrderRefund`."
+        },
+        "order": {
+          "type": "string",
+          "description": "The unique reference hash for the parent Forage `Order`."
+        },
+        "funding_type": {
+          "type": "string",
+          "description": "A string that represents the type of tender. One of:\n\n- `benefit`\n- `credit_payfac`\n- `credit_tpp`\n- `ebt_cash`\n- `ebt_snap`\n- `wic`\n",
+          "enum": [
+            "benefit",
+            "credit_payfac",
+            "credit_tpp",
+            "ebt_snap",
+            "ebt_cash",
+            "wic"
+          ]
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the `OrderRefund`. One of:\n\n- `canceled`: The `OrderRefund` has been voided and can’t be changed.\n\n- `expired`: The `OrderRefund` has expired and can’t be used.\n\n- `failed`: The `OrderRefund` failed to process. Check the `receipt.message` field for a description of the error.\n\n- `processing`: The outcome of the `OrderRefund` is pending, and the refund can’t be modified. _This status is not returned if you’re using Forage version `2024-01-08` or higher._\n\n- `requires_confirmation`: The `OrderRefund` requires confirmation before it can be processed. Contact Forage support to confirm this refund.\n\n- `succeeded`: The `OrderRefund` has been successfully processed and will be included in settlement.\n",
+          "enum": [
+            "canceled",
+            "expired",
+            "failed",
+            "processing",
+            "requires_confirmation",
+            "succeeded"
+          ]
+        },
+        "last_processing_error": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "The `code` and `message` values corresponding to the most recent [Payments API error](https://docs.joinforage.app/reference/errors#payments-api-errors). Always `null` when the `Payment` is created."
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A UTC timestamp that indicates when this object was created, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string."
+        },
+        "updated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A UTC timestamp that indicates when this object was last modified, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string."
+        },
+        "receipt": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/ReceiptData"
+            }
+          ],
+          "nullable": true
+        },
+        "tpp_lookup_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The unique identifier from the relevant credit TPP or null for EBT refunds. For Stripe integrations, this is the id of the Refund object on Stripe's backend.\n"
+        }
+      },
+      "required": [
+        "ref",
+        "order",
+        "funding_type",
+        "created",
+        "updated",
+        "status",
+        "amount",
+        "metadata"
+      ]
+    }
+  ],
+  "$defs": {
+    "BalanceResponse": {
+      "type": "object",
+      "description": "An object that represents an EBT cardholder's account balance.",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "description": "The unique identifier for the balance record."
+        },
+        "snap": {
+          "type": "string",
+          "format": "currency",
+          "description": "The available SNAP balance in USD on the customer’s EBT Card, represented as a numeric string."
+        },
+        "non_snap": {
+          "type": "string",
+          "format": "currency",
+          "description": "The available EBT Cash balance in USD on the customer's EBT Card, represented as a numeric string."
+        },
+        "updated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A UTC timestamp that indicates when the funds in the account last changed, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string."
+        },
+        "sequence_number": {
+          "type": "string",
+          "description": "A transaction number for this `PaymentMethod`'s most recent balance check. Returned only for POS Terminal transactions; omitted from online merchant balance checks."
+        }
+      }
+    },
+    "ExternalOrderIDField": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "A unique identifier for the order as created by the merchant or platform (not Forage).\n\nWhen a merchant or platform passes this order ID to Forage, it persists in each Forage transaction related to the `Order`. This field enables merchants to map order IDs in their system to corresponding Forage `Order` IDs.\n\n**You must build with Forage Version `2023-05-15` or later to use `external_order_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.\n"
+    },
+    "MetadataObject": {
+      "type": "object",
+      "description": "A required object containing merchant-defined key-value pairs to provide additional context for the payment.\n\nMerchants should use this field to store **reference information** relevant to the transaction (for example, order details, system identifiers, or tracking data). This helps link the payment to records within their system.\n\nPass an empty object (`{}`) if no additional information is available.\n\n> ⚠️ Personally Identifiable Information\n>\n> **Do not include personally identifiable information (PII)** such as names, emails, or payment details.\n"
+    },
+    "OrderRefundRequest": {
+      "type": "object",
+      "description": "This object represents an order refund. It is associated with a previously created OrderPayment object. Funds will be refunded to the PaymentMethod originally charged.",
+      "properties": {
+        "payment": {
+          "type": "string",
+          "description": "A unique reference hash for the Forage `OrderPayment` to be refunded, returned when the [`OrderPayment` was created](https://docs.joinforage.app/reference/create-order-payment)."
+        },
+        "amount": {
+          "type": "string",
+          "format": "decimal",
+          "description": "The amount to be refunded in USD. Does not need to equal the `amount` field of the `OrderPayment`, if a partial refund. Precision is supported to the penny.\n\nThe minimum amount that can be refunded is `0.01`.\n"
+        },
+        "reason": {
+          "type": "string",
+          "description": "A string that describes why the refund is happening."
+        },
+        "metadata": {
+          "$ref": "#/$defs/MetadataObject"
+        },
+        "merchant_fixed_settlement": {
+          "type": "string",
+          "format": "decimal",
+          "description": "The fixed amount in USD that should be restored to the merchant from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny."
+        },
+        "platform_fixed_settlement": {
+          "type": "string",
+          "format": "decimal",
+          "description": "The fixed amount in USD that should be restored to the platform from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny."
+        },
+        "external_order_id": {
+          "$ref": "#/$defs/ExternalOrderIDField"
+        }
+      },
+      "required": [
+        "payment",
+        "amount",
+        "reason",
+        "metadata"
+      ]
+    },
+    "ReceiptData": {
+      "type": "object",
+      "description": "Most of the information that you're required to display to the customer, according to FNS regulations.\n\nThis field is `null` if the data that populates the receipt is not yet available.\n\nThe total amount paid by the customer is `snap_amount` + `ebt_cash_amount` + `other_amount`. This amount will be settled with the merchant after applying Forage's fees.\n",
+      "properties": {
+        "ref_number": {
+          "type": "string",
+          "description": "A unique reference hash for the Forage `Order`, `Payment`, or `Refund` associated with this receipt.\n\nNote: `receipt.ref_number` equals `ref`.\n",
+          "default": "45e3f12a90"
+        },
+        "is_voided": {
+          "type": "boolean",
+          "description": "Whether the transaction associated with this receipt has been voided. If `false`, then the transaction finished processing as expected. If `true`, then the transaction was reversed."
+        },
+        "snap_amount": {
+          "type": "string",
+          "description": "The USD amount charged/refunded to the SNAP balance of the EBT Card, represented as a numeric string.",
+          "default": "25.99"
+        },
+        "ebt_cash_amount": {
+          "type": "string",
+          "format": "currency",
+          "description": "The USD amount charged/refunded to the EBT Cash balance of the EBT Card, represented as a numeric string.",
+          "default": "10.99"
+        },
+        "cash_back_amount": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "currency",
+          "description": "The USD amount of cash back given to the customer, represented as a numeric string.",
+          "default": "0.00"
+        },
+        "other_amount": {
+          "type": "string",
+          "format": "currency",
+          "description": "The USD amount charged/refunded to any payment method that is not an EBT Card, represented as a numeric string.",
+          "default": "5.99"
+        },
+        "sales_tax_applied": {
+          "type": "string",
+          "format": "currency",
+          "description": "The USD amount of taxes charged to the customer’s non-EBT payment instrument, represented as a numeric string.",
+          "default": "5.16"
+        },
+        "balance": {
+          "nullable": true,
+          "allOf": [
+            {
+              "$ref": "#/$defs/BalanceResponse"
+            }
+          ]
+        },
+        "last_4": {
+          "type": "string",
+          "description": "The last four digits of the EBT Card number.",
+          "default": "3456"
+        },
+        "message": {
+          "type": "string",
+          "description": "A message from the EBT payment network that must be displayed to the EBT cardholder.",
+          "default": "Approved"
+        },
+        "transaction_type": {
+          "type": "string",
+          "enum": [
+            "Order",
+            "Refund",
+            "Payment"
+          ],
+          "description": "A constant string that is used to identify the transaction type associated with the receipt.\n",
+          "default": "Refund"
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A UTC timestamp of when the Forage transaction object was created, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.",
+          "default": "2021-06-16T00:11:50.000000Z"
+        },
+        "sequence_number": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The terminal transaction sequence number for POS transactions. `null` for online (non-POS) transactions."
+        }
+      }
+    }
+  }
+}

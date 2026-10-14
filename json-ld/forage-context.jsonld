@@ -1,0 +1,429 @@
+{
+  "@context": {
+    "@vocab": "https://joinforage.com/schema#",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "forage": "https://joinforage.com/schema#",
+    "RevokeTokenRequest": "forage:RevokeTokenRequest",
+    "client_id": {
+      "@id": "forage:client_id",
+      "@type": "xsd:string"
+    },
+    "client_secret": {
+      "@id": "forage:client_secret",
+      "@type": "xsd:string"
+    },
+    "token": {
+      "@id": "forage:token",
+      "@type": "xsd:string"
+    },
+    "ErrorResponseObject": "forage:ErrorResponseObject",
+    "path": {
+      "@id": "forage:path",
+      "@type": "xsd:string"
+    },
+    "errors": {
+      "@id": "forage:errors",
+      "@type": "@id"
+    },
+    "BulkRevokeTokenRequest": "forage:BulkRevokeTokenRequest",
+    "revoke_count": {
+      "@id": "forage:revoke_count",
+      "@type": "xsd:integer"
+    },
+    "SessionTokenRequest": "forage:SessionTokenRequest",
+    "customer_id": {
+      "@id": "forage:customer_id",
+      "@type": "xsd:string"
+    },
+    "BalanceResponse": "forage:BalanceResponse",
+    "id": {
+      "@id": "forage:id",
+      "@type": "xsd:integer"
+    },
+    "snap": {
+      "@id": "forage:snap",
+      "@type": "xsd:string"
+    },
+    "non_snap": {
+      "@id": "forage:non_snap",
+      "@type": "xsd:string"
+    },
+    "updated": {
+      "@id": "forage:updated",
+      "@type": "xsd:dateTime"
+    },
+    "sequence_number": {
+      "@id": "forage:sequence_number",
+      "@type": "xsd:string"
+    },
+    "EBTCardResponse": "forage:EBTCardResponse",
+    "last_4": {
+      "@id": "forage:last_4",
+      "@type": "xsd:string"
+    },
+    "created": {
+      "@id": "forage:created",
+      "@type": "xsd:dateTime"
+    },
+    "state": {
+      "@id": "forage:state",
+      "@type": "xsd:string"
+    },
+    "fingerprint": {
+      "@id": "forage:fingerprint",
+      "@type": "xsd:string"
+    },
+    "fingerprint_v2": {
+      "@id": "forage:fingerprint_v2",
+      "@type": "xsd:string"
+    },
+    "NonEBTCard": "forage:NonEBTCard",
+    "brand": {
+      "@id": "forage:brand",
+      "@type": "xsd:string"
+    },
+    "exp_month": {
+      "@id": "forage:exp_month",
+      "@type": "xsd:decimal"
+    },
+    "exp_year": {
+      "@id": "forage:exp_year",
+      "@type": "xsd:decimal"
+    },
+    "PaymentMethod": "forage:PaymentMethod",
+    "type": {
+      "@id": "forage:type",
+      "@type": "xsd:string"
+    },
+    "reusable": {
+      "@id": "forage:reusable",
+      "@type": "xsd:boolean"
+    },
+    "EBTCard": "forage:EBTCard",
+    "number": {
+      "@id": "forage:number",
+      "@type": "xsd:string"
+    },
+    "PaymentMethodUpdateRequest": "forage:PaymentMethodUpdateRequest",
+    "PaginatedReportCommonFields": "forage:PaginatedReportCommonFields",
+    "next": {
+      "@id": "forage:next",
+      "@type": "xsd:string"
+    },
+    "previous": {
+      "@id": "forage:previous",
+      "@type": "xsd:string"
+    },
+    "BalanceSessionRequest": "forage:BalanceSessionRequest",
+    "payment_method": {
+      "@id": "forage:payment_method",
+      "@type": "xsd:string"
+    },
+    "success_redirect_url": {
+      "@id": "forage:success_redirect_url",
+      "@type": "xsd:string"
+    },
+    "cancel_redirect_url": {
+      "@id": "forage:cancel_redirect_url",
+      "@type": "xsd:string"
+    },
+    "SessionRequest": "forage:SessionRequest",
+    "delivery_address": {
+      "@id": "forage:delivery_address",
+      "@type": "@id"
+    },
+    "is_delivery": {
+      "@id": "forage:is_delivery",
+      "@type": "xsd:boolean"
+    },
+    "is_commercial_shipping": {
+      "@id": "forage:is_commercial_shipping",
+      "@type": "xsd:boolean"
+    },
+    "supported_benefits": {
+      "@id": "forage:supported_benefits",
+      "@container": "@list"
+    },
+    "platform_fee": {
+      "@id": "forage:platform_fee",
+      "@type": "xsd:decimal"
+    },
+    "external_order_id": {
+      "@id": "forage:external_order_id",
+      "@type": "@id"
+    },
+    "external_location_id": {
+      "@id": "forage:external_location_id",
+      "@type": "@id"
+    },
+    "PaymentDetail": "forage:PaymentDetail",
+    "amount": {
+      "@id": "forage:amount",
+      "@type": "xsd:decimal"
+    },
+    "metadata": {
+      "@id": "forage:metadata",
+      "@type": "@id"
+    },
+    "description": {
+      "@id": "forage:description",
+      "@type": "xsd:string"
+    },
+    "funding_type": {
+      "@id": "forage:funding_type",
+      "@type": "xsd:string"
+    },
+    "SessionResponse": "forage:SessionResponse",
+    "ref": {
+      "@id": "forage:ref",
+      "@type": "xsd:string"
+    },
+    "status": {
+      "@id": "forage:status",
+      "@type": "xsd:string"
+    },
+    "success_date": {
+      "@id": "forage:success_date",
+      "@type": "xsd:dateTime"
+    },
+    "receipt": {
+      "@id": "forage:receipt"
+    },
+    "expires_at": {
+      "@id": "forage:expires_at",
+      "@type": "xsd:string"
+    },
+    "redirect_url": {
+      "@id": "forage:redirect_url",
+      "@type": "@id"
+    },
+    "previous_errors": {
+      "@id": "forage:previous_errors",
+      "@type": "@id"
+    },
+    "DeliveryAddressData": "forage:DeliveryAddressData",
+    "city": {
+      "@id": "forage:city",
+      "@type": "xsd:string"
+    },
+    "country": {
+      "@id": "forage:country",
+      "@type": "xsd:string"
+    },
+    "line1": {
+      "@id": "forage:line1",
+      "@type": "xsd:string"
+    },
+    "line2": {
+      "@id": "forage:line2",
+      "@type": "xsd:string"
+    },
+    "zipcode": {
+      "@id": "forage:zipcode",
+      "@type": "xsd:string"
+    },
+    "ReceiptData": "forage:ReceiptData",
+    "ref_number": {
+      "@id": "forage:ref_number",
+      "@type": "xsd:string"
+    },
+    "is_voided": {
+      "@id": "forage:is_voided",
+      "@type": "xsd:boolean"
+    },
+    "snap_amount": {
+      "@id": "forage:snap_amount",
+      "@type": "xsd:string"
+    },
+    "ebt_cash_amount": {
+      "@id": "forage:ebt_cash_amount",
+      "@type": "xsd:string"
+    },
+    "cash_back_amount": {
+      "@id": "forage:cash_back_amount",
+      "@type": "xsd:string"
+    },
+    "other_amount": {
+      "@id": "forage:other_amount",
+      "@type": "xsd:string"
+    },
+    "sales_tax_applied": {
+      "@id": "forage:sales_tax_applied",
+      "@type": "xsd:string"
+    },
+    "balance": {
+      "@id": "forage:balance"
+    },
+    "message": {
+      "@id": "forage:message",
+      "@type": "xsd:string"
+    },
+    "transaction_type": {
+      "@id": "forage:transaction_type",
+      "@type": "xsd:string"
+    },
+    "FullyHostedSessionResponse": "forage:FullyHostedSessionResponse",
+    "snap_total": {
+      "@id": "forage:snap_total",
+      "@type": "xsd:string"
+    },
+    "ebt_cash_total": {
+      "@id": "forage:ebt_cash_total",
+      "@type": "xsd:string"
+    },
+    "remaining_total": {
+      "@id": "forage:remaining_total",
+      "@type": "xsd:string"
+    },
+    "product_list": {
+      "@id": "forage:product_list",
+      "@container": "@list"
+    },
+    "psp_customer_id": {
+      "@id": "forage:psp_customer_id",
+      "@type": "xsd:string"
+    },
+    "ebt_payment_method": {
+      "@id": "forage:ebt_payment_method",
+      "@type": "xsd:string"
+    },
+    "ProductData": "forage:ProductData",
+    "name": {
+      "@id": "forage:name",
+      "@type": "xsd:string"
+    },
+    "upc": {
+      "@id": "forage:upc",
+      "@type": "xsd:string"
+    },
+    "gtin": {
+      "@id": "forage:gtin",
+      "@type": "xsd:string"
+    },
+    "unit_price": {
+      "@id": "forage:unit_price",
+      "@type": "xsd:decimal"
+    },
+    "quantity": {
+      "@id": "forage:quantity",
+      "@type": "xsd:decimal"
+    },
+    "tax_rate": {
+      "@id": "forage:tax_rate",
+      "@type": "xsd:decimal"
+    },
+    "tax_rate_list": {
+      "@id": "forage:tax_rate_list",
+      "@container": "@list"
+    },
+    "taxes_charged": {
+      "@id": "forage:taxes_charged",
+      "@type": "xsd:decimal"
+    },
+    "taxes_exempted": {
+      "@id": "forage:taxes_exempted",
+      "@type": "xsd:decimal"
+    },
+    "tax_total": {
+      "@id": "forage:tax_total",
+      "@type": "xsd:decimal"
+    },
+    "eligibility": {
+      "@id": "forage:eligibility",
+      "@type": "xsd:string"
+    },
+    "ProductDataResponse": "forage:ProductDataResponse",
+    "cash_amount": {
+      "@id": "forage:cash_amount",
+      "@type": "xsd:string"
+    },
+    "credit_debit_amount": {
+      "@id": "forage:credit_debit_amount",
+      "@type": "xsd:string"
+    },
+    "tax_collected": {
+      "@id": "forage:tax_collected",
+      "@type": "xsd:string"
+    },
+    "OrderResponse": "forage:OrderResponse",
+    "payments": {
+      "@id": "forage:payments",
+      "@container": "@list"
+    },
+    "refunds": {
+      "@id": "forage:refunds",
+      "@container": "@list"
+    },
+    "OrderUpdateRequest": "forage:OrderUpdateRequest",
+    "OrderPaymentRequest": "forage:OrderPaymentRequest",
+    "merchant_fixed_settlement": {
+      "@id": "forage:merchant_fixed_settlement",
+      "@type": "xsd:string"
+    },
+    "platform_fixed_settlement": {
+      "@id": "forage:platform_fixed_settlement",
+      "@type": "xsd:string"
+    },
+    "PaymentRequest": "forage:PaymentRequest",
+    "tpp_lookup_id": {
+      "@id": "forage:tpp_lookup_id",
+      "@type": "xsd:string"
+    },
+    "merchant_destination_account": {
+      "@id": "forage:merchant_destination_account",
+      "@type": "xsd:string"
+    },
+    "pos_terminal": {
+      "@id": "forage:pos_terminal"
+    },
+    "BulkRefundRequest": "forage:BulkRefundRequest",
+    "reason": {
+      "@id": "forage:reason",
+      "@type": "xsd:string"
+    },
+    "OrderRefundRequest": "forage:OrderRefundRequest",
+    "payment": {
+      "@id": "forage:payment",
+      "@type": "xsd:string"
+    },
+    "OrderRefundByProductRequest": "forage:OrderRefundByProductRequest",
+    "products": {
+      "@id": "forage:products",
+      "@container": "@list"
+    },
+    "CapturePaymentRequest": "forage:CapturePaymentRequest",
+    "capture_amount": {
+      "@id": "forage:capture_amount",
+      "@type": "xsd:string"
+    },
+    "qualified_healthcare_total": {
+      "@id": "forage:qualified_healthcare_total",
+      "@type": "xsd:string"
+    },
+    "qualified_healthcare_subtotal": {
+      "@id": "forage:qualified_healthcare_subtotal",
+      "@type": "xsd:string"
+    },
+    "ProductDataHsaFsa": "forage:ProductDataHsaFsa",
+    "CollectPinBackendRequest": "forage:CollectPinBackendRequest",
+    "pin": {
+      "@id": "forage:pin",
+      "@type": "xsd:string"
+    },
+    "AuthorizePaymentRequest": "forage:AuthorizePaymentRequest",
+    "request_partial_authorization": {
+      "@id": "forage:request_partial_authorization",
+      "@type": "xsd:boolean"
+    },
+    "PaymentRefundRequest": "forage:PaymentRefundRequest"
+  },
+  "@type": "schema:Dataset",
+  "schema:name": "Forage API JSON-LD context",
+  "schema:description": "A JSON-LD @context for the objects Forage's own API contract declares: one class per component schema, one property per declared field, typed from the contract. Derived by script (derive-json-ld.py, 2026-10-14) from openapi/forage-payments-api-openapi.yml.",
+  "dcterms:created": "2026-10-14",
+  "dcterms:source": [
+    "openapi/forage-payments-api-openapi.yml"
+  ]
+}

@@ -1,0 +1,774 @@
+generated: '2026-10-14'
+method: generated
+source: openapi/forage-payments-api-openapi.yml
+description: Recommended x-agentic-access execution contracts, classified heuristically from
+  the OpenAPI. A governance starting point for exposing this API to AI agents — review and bind
+  audience per deployment. See research/curity/agentic-governance/.
+summary:
+  operations: 43
+  by_action_class:
+    acting: 27
+    connected: 16
+  by_consequence:
+    write: 4
+    read: 16
+    physical: 21
+    safety-critical: 2
+  human_in_the_loop_required: 2
+operations:
+- path: /api/balance_sessions/
+  method: post
+  operationId: Create balance session
+  x-agentic-access:
+    action-class: acting
+    consequence: write
+    subject: required
+    scope:
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 900
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/balance_sessions/{session_ref}/
+  method: get
+  operationId: View balance session
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - internal
+    - pinpad_only
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/capture_sessions/
+  method: post
+  operationId: Create capture session
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/orders/{order_ref}/
+  method: get
+  operationId: Get order
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - hosted_checkout
+    - internal
+    - pinpad_only
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/orders/{order_ref}/
+  method: patch
+  operationId: Update order
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/orders/{order_ref}/cancel/
+  method: post
+  operationId: Cancel order
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/orders/{order_ref}/payments/
+  method: get
+  operationId: Get all payments
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - hosted_checkout
+    - internal
+    - pinpad_only
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/orders/{order_ref}/payments/{payment_ref}/
+  method: get
+  operationId: Get a payment
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - hosted_checkout
+    - internal
+    - pinpad_only
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/orders/{order_ref}/payments/{payment_ref}/
+  method: patch
+  operationId: PATCH Update an order payment
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/orders/{order_ref}/payments/{payment_ref}/cancel/
+  method: post
+  operationId: Cancel a payment
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/orders/{order_ref}/refund_all/
+  method: post
+  operationId: Refund order
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - hosted_checkout
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/orders/{order_ref}/refund_by_product/
+  method: post
+  operationId: Create refunds by product
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - hosted_checkout
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/orders/{order_ref}/refunds/
+  method: post
+  operationId: Create a refund
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - hosted_checkout
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/orders/{order_ref}/refunds/
+  method: get
+  operationId: Get all order refunds
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - hosted_checkout
+    - internal
+    - pinpad_only
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/orders/{order_ref}/refunds/{refund_ref}/
+  method: get
+  operationId: Get an order refund
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - hosted_checkout
+    - internal
+    - pinpad_only
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/payment_methods/
+  method: post
+  operationId: Create payment method
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/payment_methods/{payment_method_ref}/
+  method: get
+  operationId: Get payment method
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - hosted_checkout
+    - internal
+    - pinpad_only
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/payment_methods/{payment_method_ref}/
+  method: patch
+  operationId: Update a payment method
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/payment_methods/{payment_method_ref}/
+  method: delete
+  operationId: Delete payment method
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/payments/
+  method: post
+  operationId: Create a payment (custom checkout)
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/payments/
+  method: get
+  operationId: Get payment details by merchant id.
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - pinpad_only
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/payments/{payment_ref}/
+  method: get
+  operationId: Get payment details
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - internal
+    - pinpad_only
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/payments/{payment_ref}/
+  method: patch
+  operationId: Update a payment
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/payments/{payment_ref}/authorize/
+  method: post
+  operationId: Authorize a payment
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/payments/{payment_ref}/cancel/
+  method: post
+  operationId: Cancel a payment (custom checkout)
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/payments/{payment_ref}/capture-sync/
+  method: post
+  operationId: Capture a Payment during sandbox testing
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/payments/{payment_ref}/capture_payment/
+  method: post
+  operationId: Capture a payment - deferred capture
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/payments/{payment_ref}/collect_pin_backend/
+  method: post
+  operationId: Submit PIN during sandbox testing
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/payments/{payment_ref}/refunds/
+  method: post
+  operationId: Create a refund (custom checkout)
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/payments/{payment_ref}/refunds/
+  method: get
+  operationId: Get all payment refunds
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - internal
+    - pinpad_only
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/payments/{payment_ref}/refunds/{refund_ref}/
+  method: get
+  operationId: Get a payment refund
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - internal
+    - pinpad_only
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+  method: post
+  operationId: Void a refund
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/payments/{payment_ref}/void/
+  method: post
+  operationId: Void a payment (custom checkout)
+  x-agentic-access:
+    action-class: acting
+    consequence: physical
+    subject: required
+    scope:
+    - internal
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 300
+      exchange: true
+      purpose-required: true
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/session_token/
+  method: post
+  operationId: forage_oauth:forage_session_token
+  x-agentic-access:
+    action-class: acting
+    consequence: write
+    subject: required
+    audience: null
+    token:
+      max-ttl: 900
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/sessions/
+  method: post
+  operationId: Create session
+  x-agentic-access:
+    action-class: acting
+    consequence: write
+    subject: required
+    scope:
+    - hosted_checkout
+    - pinpad_only
+    audience: null
+    token:
+      max-ttl: 900
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /api/state_card_details
+  method: get
+  operationId: Retrieve state card details
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - hosted_checkout
+    - internal
+    - pinpad_only
+    - reporting
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /o/bulk_revoke/
+  method: post
+  operationId: forage_oauth:forage_bulk_revoke_token
+  x-agentic-access:
+    action-class: acting
+    consequence: safety-critical
+    subject: required
+    audience: null
+    token:
+      max-ttl: 120
+      exchange: true
+      purpose-required: true
+      proof-of-possession: true
+    escalation:
+      human-in-the-loop: required
+    audit: required
+- path: /o/revoke_token/
+  method: post
+  operationId: forage_oauth:forage_revoke_token
+  x-agentic-access:
+    action-class: acting
+    consequence: safety-critical
+    subject: required
+    audience: null
+    token:
+      max-ttl: 120
+      exchange: true
+      purpose-required: true
+      proof-of-possession: true
+    escalation:
+      human-in-the-loop: required
+    audit: required
+- path: /o/token/
+  method: post
+  operationId: forage_oauth:forage_token
+  x-agentic-access:
+    action-class: acting
+    consequence: write
+    subject: required
+    audience: null
+    token:
+      max-ttl: 900
+    escalation:
+      human-in-the-loop: conditional
+      triggers:
+      - abnormal
+      - high-value
+    audit: required
+- path: /reporting/orders/
+  method: get
+  operationId: reporting:orders
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - internal
+    - reporting
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /reporting/payouts/
+  method: get
+  operationId: reporting:payouts
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - internal
+    - reporting
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /reporting/payouts/{payout_id}/transactions/
+  method: get
+  operationId: reporting:transactions_by_payout
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - internal
+    - reporting
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /reporting/transactions/
+  method: get
+  operationId: reporting:transactions
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    scope:
+    - internal
+    - reporting
+    token:
+      max-ttl: 3600
+    audit: none

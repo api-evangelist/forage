@@ -1,0 +1,49 @@
+generated: '2026-10-14'
+method: derived
+source: openapi/forage-payments-api-openapi.yml
+schemes:
+- name: OAuth2
+  source: openapi/forage-payments-api-openapi.yml
+  flows:
+  - flow: password
+    tokenUrl: /o/token/
+  - flow: clientCredentials
+    tokenUrl: /o/token/
+  description: Pass the access token in the 'Authorization' header with the format "Bearer ${token}",
+    i.e. the word "Bearer" and your access token from the /o/token/ API, separated by whitespace.
+scopes:
+- scope: disbursement
+  description: Scope for tokens which can disburse money to merchants.
+  flows:
+  - clientCredentials
+  sources:
+  - openapi/forage-payments-api-openapi.yml
+- scope: hosted_checkout
+  description: Scope for tokens used by merchant applications which allow Forage to manage split
+    tender processing (i.e. EBT + Credit/Debit).
+  flows:
+  - password
+  sources:
+  - openapi/forage-payments-api-openapi.yml
+- scope: internal
+  description: Scope for tokens used by Forage internal applications.
+  flows:
+  - clientCredentials
+  sources:
+  - openapi/forage-payments-api-openapi.yml
+- scope: pin-protected
+  description: Scope for tokens which can access secure storage.
+  flows:
+  - clientCredentials
+  sources:
+  - openapi/forage-payments-api-openapi.yml
+- scope: pinpad_only
+  description: Scope for tokens used by merchant applications which manage their own split tender
+    (i.e. Forage Checkout is used only for EBT processing).
+  flows:
+  - password
+  sources:
+  - openapi/forage-payments-api-openapi.yml
+- scope: reporting
+  sources:
+  - openapi/forage-payments-api-openapi.yml

@@ -1,0 +1,313 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/forage/main/json-schema/forage-payment-response-schema.json",
+  "title": "PaymentResponse",
+  "x-generated": "2026-10-14",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/forage-payments-api-openapi.yml#/components/schemas/PaymentResponse",
+  "allOf": [
+    {
+      "$ref": "#/$defs/PaymentRequest"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string",
+          "description": "A unique reference hash for the Forage `Payment` object.\n\n_Note:_ `receipt.ref_number` equals `ref`.\n\nYou need to pass this value to the front-end SDK method that captures the payment.\n"
+        },
+        "merchant": {
+          "type": "string",
+          "description": "A string that represents a unique merchant ID that Forage provides during onboarding."
+        },
+        "status": {
+          "type": "string",
+          "description": "The status of the `Payment`. One of:\n\n- `canceled`: The `Payment`object can't be used.\n- `failed`: If the error is temporary, then this `Payment` can be resubmitted for capture without modification. Check the `receipt.message` field for a description of the error.\n- `processing`: The outcome of the `Payment` is pending.\n- `requires_confirmation`: The `Payment` hasn't been submitted for processing.\n- `succeeded`: The `Payment` has been successfully processed and will be included in settlement. It can't be changed.\n- `authorized`: The `Payment` has been authorized, but not yet captured. Only applicable to HSA payments.\n",
+          "enum": [
+            "requires_confirmation",
+            "processing",
+            "canceled",
+            "succeeded",
+            "failed",
+            "authorized"
+          ]
+        },
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A UTC timestamp of when the `Payment` was created, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string."
+        },
+        "updated": {
+          "type": "string",
+          "format": "date-time",
+          "description": "A UTC timestamp of that indicates when the `Payment` was last modified, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string."
+        },
+        "expires_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "description": "A UTC timestamp of when the `Payment` will expire if it is not captured or canceled, set to 30 minutes from when the `Payment` is created.\n\nIf the `status` of the `Payment` is `succeeded` or `canceled`, then the `expires_at` value is `null`.\n"
+        },
+        "success_date": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date-time",
+          "description": "A UTC timestamp of when the `Payment` was successfully processed, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string. This value is `null` until the Payment enters the `succeeded` or `partial_capture` states."
+        },
+        "refunds": {
+          "type": "array",
+          "description": "References to the `Refund`s attached to this payment. The format depends on the `with_refunds` query parameter:\n\n- **Default behavior** (when `with_refunds` is `false` or omitted): Array of refund reference strings\n- **Expanded behavior** (when `with_refunds=true`): Array of full `Refund` objects with complete refund details\n",
+          "items": {
+            "type": "string",
+            "description": "Refund reference string"
+          }
+        },
+        "receipt": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Most of the information that you're required to display to the customer, according to FNS regulations.\n\nThis field is `null` if the data that populates the receipt is not yet available.\n\nThe total amount paid by the customer is `snap_amount` + `ebt_cash_amount` + `other_amount`. This amount will be settled with the merchant after applying Forage's fees.\n"
+        },
+        "last_processing_error": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "The `code` and `message` values corresponding to the most recent [Payments API error](https://docs.joinforage.app/reference/errors#payments-api-errors). Always `null` when the `Payment` is created."
+        },
+        "previous_errors": {
+          "$ref": "#/$defs/ErrorsArray"
+        },
+        "address_postal_code_check": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The result of any check done on the delivery address zip code. One of:\n- `pass`: The provided information is correct and matches the data on file with the card issuer.\n- `fail`: The provided information is incorrect and does not match the data on file.\n- `unavailable`: The card issuer will not perform the check.\n- `unchecked`: The information was provided but has not yet been checked by the card issuer.\n",
+          "enum": [
+            "pass",
+            "fail",
+            "unavailable",
+            "unchecked"
+          ]
+        },
+        "cvc_check": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The result of any check done on the CVC. One of:\n- `pass`: The provided information is correct and matches the data on file with the card issuer.\n- `fail`: The provided information is incorrect and does not match the data on file.\n- `unavailable`: The card issuer will not perform the check.\n- `unchecked`: The information was provided but has not yet been checked by the card issuer.\n",
+          "enum": [
+            "pass",
+            "fail",
+            "unavailable",
+            "unchecked"
+          ]
+        },
+        "delivery_address": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "The delivery or pickup address for the order, passed to the EBT network. Returns an address object with `line1`, `line2`, `city`, `state`, `zipcode`, and `country`. Null when no delivery address is set."
+        },
+        "is_delivery": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "description": "Whether the order is for delivery or pickup. Null when not specified."
+        }
+      },
+      "required": [
+        "ref",
+        "status",
+        "created",
+        "updated"
+      ]
+    }
+  ],
+  "$defs": {
+    "CustomerIDField": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "**⚠️ If you’re integrating Forage with a POS Terminal, then do not use this param. It is only supported for online transactions.**\n\nA unique identifier for the end customer making the payment.\n\nForage automatically adds the `customer_id` to the Session's corresponding `Order` and `OrderPayments`.\n\nThis field helps Forage's servers more quickly identify the customer associated with the request. While `customer_id` is not technically required, if you omit it then requests could take longer to process. **It is strongly recommended to pass customer_id.**\n\nIf you're providing your internal customer ID, then we recommend that you hash the value before sending it on the payload.\n\nEach customer should only have one unique `customer_id`. For example, if you create both a `PaymentMethod` and a Forage `Session` (Fully Hosted or Custom) or `Payment` (SDK) for the same customer, then the `customer_id` should be the same in both requests to ensure continuity of stored payment methods.\n"
+    },
+    "DeliveryAddressData": {
+      "type": "object",
+      "required": [
+        "line1",
+        "zipcode"
+      ],
+      "description": "⚠️ **Exception**: If the purchase is made in-store via a POS Terminal, then a `delivery_address` is not required when creating a `Payment`.\n\nThe address for delivery or pickup of the `Order`. Per FNS regulations, this value must always be provided. If the `Order` is for pickup, then use the merchant address.\n",
+      "properties": {
+        "city": {
+          "type": "string",
+          "description": "The name of the city."
+        },
+        "country": {
+          "type": "string",
+          "description": "Either `us` or `US`. Defaults to `US` if not provided."
+        },
+        "line1": {
+          "type": "string",
+          "description": "The first line of the street address."
+        },
+        "line2": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The second line of the street address."
+        },
+        "zipcode": {
+          "type": "string",
+          "description": "The zip or postal code."
+        },
+        "state": {
+          "type": "string",
+          "description": "The two-letter abbreviation, can be upper or lowercase, for the US state."
+        }
+      }
+    },
+    "ErrorsArray": {
+      "type": "array",
+      "description": "An array with information about the error.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "A short string that represents the error."
+          },
+          "message": {
+            "type": "string",
+            "description": "A developer-facing message with more details about the error, not to be displayed to customers."
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "resource": {
+                "type": "string",
+                "description": "The type of the Forage resource involved in the error."
+              },
+              "ref": {
+                "type": "string",
+                "description": "If applicable, the ten character reference hash of the Forage resource that caused the error. An empty string if no specific individual resource was involved."
+              }
+            }
+          },
+          "details": {
+            "type": "object",
+            "description": "Additional details about the error, if applicable."
+          }
+        }
+      }
+    },
+    "ExternalLocationIDField": {
+      "type": "string",
+      "description": "A unique identifier, provided by the merchant or platform (not Forage), that indicates the physical fulfillment location for the order. For example, this field could specify which location of a grocery store chain fulfilled an order.\n"
+    },
+    "ExternalOrderIDField": {
+      "type": "string",
+      "maxLength": 64,
+      "description": "A unique identifier for the order as created by the merchant or platform (not Forage).\n\nWhen a merchant or platform passes this order ID to Forage, it persists in each Forage transaction related to the `Order`. This field enables merchants to map order IDs in their system to corresponding Forage `Order` IDs.\n\n**You must build with Forage Version `2023-05-15` or later to use `external_order_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.\n"
+    },
+    "MetadataObject": {
+      "type": "object",
+      "description": "A required object containing merchant-defined key-value pairs to provide additional context for the payment.\n\nMerchants should use this field to store **reference information** relevant to the transaction (for example, order details, system identifiers, or tracking data). This helps link the payment to records within their system.\n\nPass an empty object (`{}`) if no additional information is available.\n\n> ⚠️ Personally Identifiable Information\n>\n> **Do not include personally identifiable information (PII)** such as names, emails, or payment details.\n"
+    },
+    "PaymentRequest": {
+      "type": "object",
+      "description": "This object represents a single payment. It is associated with a single payment method.",
+      "properties": {
+        "amount": {
+          "type": "string",
+          "format": "decimal",
+          "description": "A positive decimal number that represents how much to charge the [`PaymentMethod`](https://docs.joinforage.app/reference/payment-methods) in USD. Precision is supported to the penny. The minimum amount that can be charged is `0.01`. To differentiate between a SNAP and an EBT Cash charge on the same EBT Card, use the `funding_type` field. If you need to charge both funding types, then create a `Payment` for each charge."
+        },
+        "funding_type": {
+          "type": "string",
+          "description": "The payment instrument type. Use this field to differentiate between a SNAP (`ebt_snap`) and an EBT Cash (`ebt_cash`) charge on the same EBT Card. If you need to charge both funding types, then create a `Payment` for each charge. Use `credit_payfac` for all charges to HSA/FSA cards. `credit_tpp` is the funding type assigned to non-EBT payment objects created via a Fully Hosted Checkout integration.",
+          "enum": [
+            "ebt_snap",
+            "ebt_cash",
+            "credit_tpp",
+            "credit_payfac",
+            "benefit",
+            "wic"
+          ]
+        },
+        "payment_method": {
+          "type": "string",
+          "description": "The unique reference hash for the existing Forage [`PaymentMethod`](https://docs.joinforage.app/reference/payment-methods) that is to be charged in this transaction.\n\n⚠️ **Exception**: POS integrations do not need to provide a `payment_method` when creating a payment.\n"
+        },
+        "delivery_address": {
+          "$ref": "#/$defs/DeliveryAddressData"
+        },
+        "is_delivery": {
+          "type": "boolean",
+          "description": "⚠️ **Exception**: If the purchase is made in-store via a POS Terminal, then a `is_delivery` is not required when creating a `Payment`.\n\nWhether the order is for delivery or pickup. This information is required per FNS regulations. Defaults to `false` if not provided.\n"
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the payment."
+        },
+        "metadata": {
+          "$ref": "#/$defs/MetadataObject"
+        },
+        "platform_fee": {
+          "type": "string",
+          "format": "decimal",
+          "description": "An optional field, for use by a platform supporting multiple merchants, that indicates the percentage cut of each payment that the platform charges as a fee."
+        },
+        "platform_fixed_settlement": {
+          "type": "string",
+          "format": "decimal",
+          "description": "The fixed amount in USD that a platform takes from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny."
+        },
+        "merchant_fixed_settlement": {
+          "type": "string",
+          "format": "decimal",
+          "description": "The fixed amount in USD that should be restored to the merchant from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny."
+        },
+        "tpp_lookup_id": {
+          "type": "string",
+          "description": "An identifier for the credit/debit TPP.\n\nFor Stripe integrations, the client secret for a Stripe `PaymentIntent`.\n"
+        },
+        "customer_id": {
+          "$ref": "#/$defs/CustomerIDField"
+        },
+        "external_order_id": {
+          "$ref": "#/$defs/ExternalOrderIDField"
+        },
+        "merchant_destination_account": {
+          "type": "string",
+          "description": "A unique reference hash for the bank account that is to receive funds settlement for this payment. Use this field if you're settling funds across multiple merchant bank accounts. Reach out to your Forage account manager for details on generating a hash.\n\nDefaults to the hash for the default merchant bank account if not provided.\n"
+        },
+        "pos_terminal": {
+          "type": "object",
+          "description": "**⚠️  This param is only supported for POS Terminal integrations. Do not use this param for online transactions.**\n\nAn object that details information about the POS Terminal that processes the payment.\n",
+          "properties": {
+            "provider_terminal_id": {
+              "type": "string",
+              "description": "A unique string that identifies the POS Terminal."
+            }
+          }
+        },
+        "external_location_id": {
+          "$ref": "#/$defs/ExternalLocationIDField"
+        }
+      },
+      "required": [
+        "funding_type"
+      ]
+    }
+  }
+}

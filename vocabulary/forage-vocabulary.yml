@@ -1,0 +1,299 @@
+generated: '2026-10-14'
+method: derived
+generator: derive-vocabulary.py
+source: openapi/forage-payments-api-openapi.yml
+vocabulary:
+  name: Forage Domain Vocabulary
+  description: 'Terms declared by Forage''s own API contract: its resource groups, objects and enumerations, with the contract''s definitions.
+    Derived, not authored.'
+  version: '2026-10-14'
+  terms:
+  - term: RevokeTokenRequest
+    definition: The configuration for single token revocation.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/RevokeTokenRequest
+  - term: ErrorsArray
+    definition: An array with information about the error.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/ErrorsArray
+  - term: ErrorResponseObject
+    definition: An object that includes details about the error.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/ErrorResponseObject
+  - term: BulkRevokeTokenRequest
+    definition: The configuration for the bulk token revocation.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/BulkRevokeTokenRequest
+  - term: SessionTokenRequest
+    definition: Optional parameters to pass when creating a session token.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/SessionTokenRequest
+  - term: BalanceResponse
+    definition: An object that represents an EBT cardholder's account balance.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/BalanceResponse
+  - term: EBTCardResponse
+    definition: An object that details information about the EBT Card.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/EBTCardResponse
+  - term: NonEBTCard
+    definition: If a [credit/debit PSP](https://docs.joinforage.app/docs/ebt-online-101#creditdebit-payment-service-provider-psp) other than Stripe
+      processes the payment, then this object details information about the non-EBT Card.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/NonEBTCard
+  - term: PaymentMethod
+    definition: An object that represents a customer's payment instrument.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/PaymentMethod
+  - term: EBTCard
+    definition: An object that details information about the EBT Card.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/EBTCard
+  - term: TokenizedPaymentMethod
+    definition: This object represents a customer's payment instrument. It has been tokenized by the server. It does not include all details about
+      the payment method. If the `PaymentMethod` has a type of `ebt`, then the `balance` field will be `null` until the `/api/payment_methods/{ref}/`
+      endpoint is called. The `balance` field will always be `null` for non-EBT payment methods.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/TokenizedPaymentMethod
+  - term: CustomerIDField
+    definition: '**⚠️ If you’re integrating Forage with a POS Terminal, then do not use this param. It is only supported for online transactions.**
+      A unique identifier for the end customer making the payment. Forage automatically adds the `customer_id` to the Session''s corresponding
+      `Order` and `OrderPayments`. This field helps Forage''s servers more quickly identify the customer associated with the request. While '
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/CustomerIDField
+  - term: PaymentMethodUpdateRequest
+    definition: The `PaymentMethod` details to update.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/PaymentMethodUpdateRequest
+  - term: PaginatedReportCommonFields
+    definition: 'Object declared by the contract with fields: next, previous.'
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/PaginatedReportCommonFields
+  - term: ExternalOrderIDField
+    definition: A unique identifier for the order as created by the merchant or platform (not Forage). When a merchant or platform passes this
+      order ID to Forage, it persists in each Forage transaction related to the `Order`. This field enables merchants to map order IDs in their
+      system to corresponding Forage `Order` IDs. **You must build with Forage Version `2023-05-15` or later to use `external_order_id`.** Ei
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/ExternalOrderIDField
+  - term: ExternalLocationIDField
+    definition: A unique identifier, provided by the merchant or platform (not Forage), that indicates the physical fulfillment location for the
+      order. For example, this field could specify which location of a grocery store chain fulfilled an order.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/ExternalLocationIDField
+  - term: BalanceSessionRequest
+    definition: This object starts a Custom Balance Check Forage `Session`, used to check the balance of an already-stored Forage `PaymentMethod`.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/BalanceSessionRequest
+  - term: SessionRequest
+    definition: This object starts a Forage Session, an instance of the ready-to-use Forage Checkout UI. It either initiates a Custom Capture
+      Session, if passed as is to the /capture_sessions/ endpoint, or a Fully Hosted Session, if passed to the /sessions/ endpoint. Refer to each
+      endpoint's documentation for details.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/SessionRequest
+  - term: PaymentDetail
+    definition: 'Object declared by the contract with fields: amount, metadata, payment_method, description, funding_type.'
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/PaymentDetail
+  - term: SessionResponse
+    definition: The common properties across all Session endpoint response payloads.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/SessionResponse
+  - term: DeliveryAddressData
+    definition: '⚠️ **Exception**: If the purchase is made in-store via a POS Terminal, then a `delivery_address` is not required when creating
+      a `Payment`. The address for delivery or pickup of the `Order`. Per FNS regulations, this value must always be provided. If the `Order`
+      is for pickup, then use the merchant address.'
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/DeliveryAddressData
+  - term: ReceiptData
+    definition: Most of the information that you're required to display to the customer, according to FNS regulations. This field is `null` if
+      the data that populates the receipt is not yet available. The total amount paid by the customer is `snap_amount` + `ebt_cash_amount` + `other_amount`.
+      This amount will be settled with the merchant after applying Forage's fees.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/ReceiptData
+  - term: MetadataObject
+    definition: A required object containing merchant-defined key-value pairs to provide additional context for the payment. Merchants should
+      use this field to store **reference information** relevant to the transaction (for example, order details, system identifiers, or tracking
+      data). This helps link the payment to records within their system. Pass an empty object (`{}`) if no additional information is availabl
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/MetadataObject
+  - term: FullyHostedSessionResponse
+    definition: The response payload represents a Fully Hosted Forage `Session`, an instance of the ready-to-use Forage Checkout UI.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/FullyHostedSessionResponse
+  - term: ProductData
+    definition: Product information for an item in a customer's cart.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/ProductData
+  - term: ProductDataResponse
+    definition: 'Object declared by the contract with fields: id, name, upc, gtin, unit_price, quantity, tax_rate, tax_rate_list, eligibility,
+      snap_amount, cash_amount, credit_debit_amount. (3 more)'
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/ProductDataResponse
+  - term: OrderResponse
+    definition: 'Object declared by the contract with fields: ref, snap_total, ebt_cash_total, remaining_total, product_list, platform_fee, delivery_address,
+      is_delivery, success_redirect_url, cancel_redirect_url, supported_benefits, psp_customer_id. (11 more)'
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/OrderResponse
+  - term: OrderUpdateRequest
+    definition: This object updates an order.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/OrderUpdateRequest
+  - term: OrderPaymentRequest
+    definition: This object represents a one-time payment, charged to a single payment method, associated with a specific Forage Order.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/OrderPaymentRequest
+  - term: PaymentRequest
+    definition: This object represents a single payment. It is associated with a single payment method.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/PaymentRequest
+  - term: BulkRefundRequest
+    definition: This object represents a payment refund. It is associated with a previously created Payment object. Funds will be refunded to
+      the PaymentMethod originally charged.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/BulkRefundRequest
+  - term: OrderRefundRequest
+    definition: This object represents an order refund. It is associated with a previously created OrderPayment object. Funds will be refunded
+      to the PaymentMethod originally charged.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/OrderRefundRequest
+  - term: OrderRefundByProductRequest
+    definition: This object represents a request to create refunds for specific products in an Order. It creates OrderRefund objects for the specified
+      products and refunds the appropriate amounts to their original payment methods.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/OrderRefundByProductRequest
+  - term: CapturePaymentRequest
+    definition: A request body to pass to `/payments/{payment_ref}/capture_payment/` to capture a previously authorized HSA/FSA payment.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/CapturePaymentRequest
+  - term: ProductDataHsaFsa
+    definition: Product information for an item in a customer's cart. Include either UPC or GTIN for each item.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/ProductDataHsaFsa
+  - term: CollectPinBackendRequest
+    definition: 'Object declared by the contract with fields: pin.'
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/CollectPinBackendRequest
+  - term: AuthorizePaymentRequest
+    definition: An request body to pass to `/payments/{payment_ref}/authorize/` to authorize an HSA/FSA payment.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/AuthorizePaymentRequest
+  - term: PaymentRefundRequest
+    definition: This object represents a refund of a previously created Payment object. Funds will be refunded to the PaymentMethod originally
+      charged.
+    tags:
+    - Object
+    source: openapi/forage-payments-api-openapi.yml#/components/schemas/PaymentRefundRequest
+  - term: Custom Sessions
+    definition: 'Resource group in the contract; its operation POST /api/balance_sessions/: > ⚠️ FNS Requirements > > FNS prohibits balance inquiries
+      on sites and apps that offer guest checkout.'
+    tags:
+    - Resource Group
+    source: openapi/forage-payments-api-openapi.yml
+  - term: Orders
+    definition: 'Resource group in the contract; its operation GET /api/orders/{order_ref}/: A `GET` request to `/orders/{order_ref}/` retrieves
+      the specified [`Order` object](https://docs.joinforage.app/reference/orders#order-object).'
+    tags:
+    - Resource Group
+    source: openapi/forage-payments-api-openapi.yml
+  - term: Order Payments
+    definition: 'Resource group in the contract; its operation GET /api/orders/{order_ref}/payments/: A `GET` request to `/orders/{order_ref}/payments/`
+      retrieves all `OrderPayments` associated with the provided `order_ref`.'
+    tags:
+    - Resource Group
+    source: openapi/forage-payments-api-openapi.yml
+  - term: Payments
+    definition: 'Resource group in the contract; its operation PATCH /api/orders/{order_ref}/payments/{payment_ref}/: > ⚠️ Update `OrderPayment`
+      Server-Side Only > > To keep your app secure, requests to update an `OrderPayment` should only be generated on the server-side.'
+    tags:
+    - Resource Group
+    source: openapi/forage-payments-api-openapi.yml
+  - term: Order Refunds
+    definition: 'Resource group in the contract; its operation POST /api/orders/{order_ref}/refund_all/: > ⚠️ Refunding Entire Orders Must Be
+      Server-Side > > To keep your app secure, requests to refund an entire Order should only be generated on the server-side.'
+    tags:
+    - Resource Group
+    source: openapi/forage-payments-api-openapi.yml
+  - term: Payment Methods
+    definition: 'Resource group in the contract; its operation POST /api/payment_methods/: A `POST` request to `/payment_methods/` creates a new
+      representation of a customer''s payment instrument in Forage''s database.'
+    tags:
+    - Resource Group
+    source: openapi/forage-payments-api-openapi.yml
+  - term: Sandbox Testing
+    definition: 'Resource group in the contract; its operation POST /api/payments/{payment_ref}/capture-sync/: A `POST` request to `/payments/{payment_ref}/capture-sync/`
+      programmatically captures an existing [`Payment` object](https://docs.joinforage.app/reference/payments#payment-object).'
+    tags:
+    - Resource Group
+    source: openapi/forage-payments-api-openapi.yml
+  - term: Deferred Capture
+    definition: 'Resource group in the contract; its operation POST /api/payments/{payment_ref}/capture_payment/: > 📘 Forage SDK Integrations
+      And HSA/FSA Only > > This endpoint is only relevant to Forage SDK integrations and HSA/FSA payments.'
+    tags:
+    - Resource Group
+    source: openapi/forage-payments-api-openapi.yml
+  - term: Payment Refunds
+    definition: 'Resource group in the contract; its operation POST /api/payments/{payment_ref}/refunds/: > ⚠️ Refund Requests Must Be Server-Side
+      > > To keep your app secure, requests to create a PaymentRefund should only be generated on the server-side.'
+    tags:
+    - Resource Group
+    source: openapi/forage-payments-api-openapi.yml
+  - term: Bearer Tokens
+    definition: 'Resource group in the contract; its operation POST /api/session_token/: > 📘 Authentication Guide > > For comprehensive details
+      about authenticating with the Forage API, refer to the [authentication guide](https://docs.joinforage.app/docs/authentication).'
+    tags:
+    - Resource Group
+    source: openapi/forage-payments-api-openapi.yml
+  - term: Fully Hosted Sessions
+    definition: 'Resource group in the contract; its operation POST /api/sessions/: A `POST` request to `/sessions/` initiates a `Session` of
+      the Fully Hosted Forage Checkout UI.'
+    tags:
+    - Resource Group
+    source: openapi/forage-payments-api-openapi.yml
+  - term: Card Details
+    definition: 'Resource group in the contract; its operation GET /api/state_card_details: This endpoint returns a predefined list of U.S.'
+    tags:
+    - Resource Group
+    source: openapi/forage-payments-api-openapi.yml
+  - term: Reports
+    definition: 'Resource group in the contract; its operation GET /reporting/orders/: > 📘 Fully Hosted And Custom Integrations Only > > Order
+      Reports are only relevant to Fully Hosted and Custom integrations.'
+    tags:
+    - Resource Group
+    source: openapi/forage-payments-api-openapi.yml

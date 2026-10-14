@@ -1,13 +1,13 @@
 aid: forage
+
 name: Forage
-description: Forage is a mission-driven payments company and one of only three payment
-  processors approved by the USDA Food and Nutrition Service (FNS) to accept SNAP EBT
-  and EBT Cash online. Forage gives grocery retailers, marketplaces, and platforms the
-  API, SDKs, and regulatory expertise to add government-benefit tender (SNAP, EBT Cash,
-  and HSA/FSA) to online and in-store checkout. The Forage Payments API tokenizes EBT
-  cards, runs PIN-secured balance inquiries, and creates, captures, voids, and refunds
-  EBT payments and orders, backed by JavaScript, iOS, Android, and POS Terminal SDKs,
-  webhooks for order/payment/refund events, and daily CSV reconciliation reports.
+
+description: Forage is a mission-driven payments company and one of only three payment processors approved by the USDA Food and Nutrition Service
+  (FNS) to accept SNAP EBT and EBT Cash online. Forage gives grocery retailers, marketplaces, and platforms the API, SDKs, and regulatory expertise
+  to add government-benefit tender (SNAP, EBT Cash, and HSA/FSA) to online and in-store checkout. The Forage Payments API tokenizes EBT cards,
+  runs PIN-secured balance inquiries, and creates, captures, voids, and refunds EBT payments and orders, backed by JavaScript, iOS, Android, and
+  POS Terminal SDKs, webhooks for order/payment/refund events, and daily CSV reconciliation reports.
+
 deliveryModel:
   model: saas
   open_source: false
@@ -19,6 +19,7 @@ deliveryModel:
   - pricing
   generated: '2026-08-28'
   method: derived
+
 accessModel:
   pricing: unknown
   onboarding: self-serve
@@ -31,20 +32,34 @@ accessModel:
   - authentication
   generated: '2026-07-22'
   method: derived
+
 image: https://framerusercontent.com/assets/ZoPlyiuvY1BwAuHbWMWp7HW8UmE.png
+
 url: https://raw.githubusercontent.com/api-evangelist/forage/refs/heads/main/apis.yml
+
 x-type: company
+
 x-source: vc-portfolio
+
 x-backed-by:
 - lightspeed-venture-partners
+
 x-tier: stub
+
 x-tier-reason: portfolio-lead
+
 specificationVersion: '0.23'
+
 created: '2026-07-17'
+
 modified: '2026-07-19'
+
 x-docs-platform: readme
+
 x-docs-platform-confidence: high
+
 x-docs-platform-checked: 2026-10-03
+
 tags:
 - Company
 - Payments
@@ -57,6 +72,7 @@ tags:
 - Grocery
 - Checkout
 - Financial Services
+
 tags_raw:
 - Company
 - Payments
@@ -70,30 +86,36 @@ tags_raw:
 - Checkout
 - Financial Services
 - Financial-Services
-apis:
-- name: Forage EBT SNAP Payments API
-  description: REST API to tokenize EBT cards, run PIN-secured balance inquiries, and
-    create, capture, void, and refund EBT SNAP, EBT Cash, and HSA/FSA payments and orders
-    for online and in-store checkout.
-  humanURL: https://docs.joinforage.app/reference/introduction
-  baseURL: https://api.joinforage.app
-  tags:
-  - Payments
-  - EBT
-  - SNAP
-  properties:
-  - type: Documentation
-    url: https://docs.joinforage.app/docs/overview
-  - type: APIReference
-    url: https://docs.joinforage.app/reference/introduction
-  - type: Sandbox
-    url: https://api.sandbox.joinforage.app
+
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
+
 common:
+- type: AgenticAccess
+  url: agentic-access/forage-agentic-access.yml
+- type: Spectral
+  url: rules/forage-rules.yml
+- type: JSONLD
+  url: json-ld/forage-context.jsonld
+- type: Vocabulary
+  url: vocabulary/forage-vocabulary.yml
+- type: Sandbox
+  url: sandbox/forage-sandbox.yml
+- type: X-MCPServerCandidate
+  url: mcp/forage-mcp.yml
+- type: Hosts
+  url: hosts/forage-hosts.yml
+- type: Vendors
+  url: vendors/forage-vendors.yml
+- type: Security
+  url: https://www.joinforage.com/app/support/security
+- type: Newsroom
+  url: https://www.joinforage.com/newsroom
+- type: OAuthScopes
+  url: scopes/forage-scopes.yml
 - type: DomainSecurity
   url: security/forage-domain-security.yml
 - type: Website
@@ -162,8 +184,48 @@ common:
   url: https://trust.joinforage.app/
 - type: TrustCenter
   url: security/forage-trust-center.yml
+
+apis:
+- name: Forage EBT SNAP Payments API
+  description: REST API to tokenize EBT cards, run PIN-secured balance inquiries, and create, capture, void, and refund EBT SNAP, EBT Cash, and
+    HSA/FSA payments and orders for online and in-store checkout.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Payments
+  - EBT
+  - SNAP
+  properties:
+  - url: openapi/forage-payments-api-openapi.yml
+    type: OpenAPI
+  - type: Documentation
+    url: https://docs.joinforage.app/docs/overview
+  - type: APIReference
+    url: https://docs.joinforage.app/reference/introduction
+  - type: Sandbox
+    url: https://api.sandbox.joinforage.app
+  - type: JSONSchema
+    url: json-schema/forage-payment-response-schema.json
+  - type: JSONSchema
+    url: json-schema/forage-order-and-taxes-report-response-schema.json
+  - type: JSONSchema
+    url: json-schema/forage-order-payment-response-schema.json
+  - type: JSONSchema
+    url: json-schema/forage-payment-refund-response-schema.json
+  - type: JSONSchema
+    url: json-schema/forage-order-refund-response-schema.json
+  - type: JSONSchema
+    url: json-schema/forage-error-response-object-schema.json
+  aid: forage:forage-ebt-snap-payments-api
+
 x-enrichment:
   date: '2026-07-19'
   status: backfilled
   pass: local-v1
   note: backfilled from .gitignore signal + verified work evidence
+
+x-readme-harvest:
+  date: '2026-10-14'
+  ops: 43
+  tool: harvest-readme-openapi.py
+  portal: https://docs.joinforage.app

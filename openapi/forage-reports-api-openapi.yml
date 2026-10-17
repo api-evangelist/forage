@@ -1,0 +1,1672 @@
+openapi: 3.2.0
+info:
+  title: Forage Payments Reports API
+  description: The Forage Payments API is a REST API for processing Electronic Benefits Transfer (EBT) payments (SNAP and EBT Cash) in your e-commerce or in-store application.
+  contact:
+    name: API Support
+    email: engineering@joinforage.com
+  version: '2025-08-04'
+servers:
+- url: https://{environment}.joinforage.app
+  variables:
+    environment:
+      default: api.sandbox
+      enum:
+      - api
+      - api.sandbox
+security: []
+tags:
+- name: Reports
+paths:
+  /reporting/orders/:
+    get:
+      parameters:
+      - name: Merchant-Account
+        in: header
+        description: 'A unique merchant ID that Forage provides during onboarding, as in `123ab45c67`. The Merchant ID can be found in the Forage [sandbox](https://dashboard.sandbox.joinforage.app/login/) or [production](https://dashboard.joinforage.app/login/) dashboard.
+
+
+          If querying on behalf of a platform that supports multiple merchants, then omitting this header returns platform-wide results. You must indicate a `Merchant-Account` header to retrieve results for a specific merchant on a platform.
+
+          '
+        schema:
+          type: string
+        required: false
+      - $ref: '#/components/parameters/APIVersionHeader'
+      - $ref: '#/components/parameters/StartDateQueryParam'
+      - $ref: '#/components/parameters/EndDateQueryParam'
+      - $ref: '#/components/parameters/LimitQueryParam'
+      - $ref: '#/components/parameters/CursorQueryParam'
+      - $ref: '#/components/parameters/StatusQueryParam'
+      tags:
+      - Reports
+      summary: Retrieve an Order Report
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request GET \\\n    --url 'https://api.sandbox.joinforage.app/reporting/orders/?start_date=2021-01-31&end_date=2021-02-28&limit=1&cursor=cJ0xMDIzLZAxLTMxKzIxLTNBMzElM0ExNC40NTUxNjMlMkIwMCUzQTAp&status=succeeded&offset=1' \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json'\n"
+      description: '> 📘 Fully Hosted And Custom Integrations Only
+
+        >
+
+        > Order Reports are only relevant to Fully Hosted and Custom integrations. Only Fully Hosted and Custom integrations generate Forage `Orders`. Use any of the other `/reporting/` endpoints if you’re building with an SDK.
+
+
+        A `GET` request to `/reporting/orders/` retrieves an Order Report.
+
+
+        On success, the API returns a list of Forage `Orders` created during the provided reporting period.'
+      operationId: reporting:orders
+      security:
+      - OAuth2:
+        - reporting
+        - internal
+      responses:
+        '200':
+          description: __OK__ - Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderAndTaxesReportResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_filters:
+                  summary: Invalid Filter
+                  value:
+                    path: /reporting/orders/
+                    errors:
+                    - code: invalid_filters
+                      message: '{filter}: required filter is missing'
+                      source:
+                        resource: Reports
+                        ref: ''
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /reporting/orders/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Reports
+                        ref: ''
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /reporting/orders/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+        '401':
+          description: __Unauthorized__
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /reporting/orders/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '429':
+          description: __Too Many Requests__
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /reporting/orders/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Reports
+                        ref: ''
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                secure_storage_inaccessible:
+                  summary: Secure Storage Inaccessible
+                  value:
+                    path: /reporting/orders/
+                    errors:
+                    - code: secure_storage_inaccessible
+                      message: Temporarily unable to access data in secure storage. Please try again.
+                      source:
+                        resource: Reports
+                        ref: ''
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /reporting/orders/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unable to continue
+                      source:
+                        resource: Reports
+                        ref: ''
+  /reporting/payouts/:
+    parameters:
+    - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+    - name: Merchant-Account
+      in: header
+      description: 'A unique merchant ID that Forage provides during onboarding, as in `123ab45c67`.
+
+
+        If querying on behalf of a platform that supports multiple merchants, then omitting this header returns the platform payouts (payouts issued to the platform directly). You must indicate a `Merchant-Account` header to retrieve results for a specific merchant on a platform.
+
+        '
+      schema:
+        type: string
+      required: false
+    - $ref: '#/components/parameters/APIVersionHeader'
+    - $ref: '#/components/parameters/StartDateQueryParam'
+    - $ref: '#/components/parameters/EndDateQueryParam'
+    - $ref: '#/components/parameters/LimitQueryParam'
+    - $ref: '#/components/parameters/CursorQueryParam'
+    get:
+      tags:
+      - Reports
+      summary: Retrieve a Payout Report
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request GET \\\n    --url 'https://api.sandbox.joinforage.app/reporting/payouts/?start_date=2021-01-31&end_date=2021-02-28&limit=1&cursor=cJ0xMDIzLZAxLTMxKzIxLTNBMzElM0ExNC40NTUxNjMlMkIwMCUzQTAp' \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json'\n"
+      description: 'A `GET` request to `/reporting/payouts/` retrieves a Payout Report. A payout is a scheduled funds disbursement from Forage to a merchant. A payout accounts for all transactions, both purchases and refunds, during the scheduled time period.
+
+
+        On success, the API returns a list of payouts that occurred between the provided `start_date` and `end_date`.'
+      operationId: reporting:payouts
+      security:
+      - OAuth2:
+        - reporting
+        - internal
+      responses:
+        '200':
+          $ref: '#/components/responses/PayoutReport200'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_filters:
+                  summary: Invalid Filter
+                  value:
+                    path: /reporting/payouts/
+                    errors:
+                    - code: invalid_filters
+                      message: '{filter}: required filter is missing'
+                      source:
+                        resource: Reports
+                        ref: ''
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /reporting/payouts/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Reports
+                        ref: ''
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /reporting/payouts/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+        '401':
+          description: __Unauthorized__
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /reporting/payouts/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '429':
+          description: __Too Many Requests__
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /reporting/payouts/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Reports
+                        ref: ''
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                secure_storage_inaccessible:
+                  summary: Secure Storage Inaccessible
+                  value:
+                    path: /reporting/payouts/
+                    errors:
+                    - code: secure_storage_inaccessible
+                      message: Temporarily unable to access data in secure storage. Please try again.
+                      source:
+                        resource: Reports
+                        ref: ''
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /reporting/payouts/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unable to continue
+                      source:
+                        resource: Reports
+                        ref: ''
+  /reporting/payouts/{payout_id}/transactions/:
+    parameters:
+    - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+    - name: Merchant-Account
+      in: header
+      description: 'A unique merchant ID that Forage provides during onboarding, as in `123ab45c67`.
+
+
+        If querying on behalf of a platform that supports multiple merchants, then omitting this header returns platform-wide results. You must indicate a `Merchant-Account` header to retrieve results for a specific merchant on a platform.
+
+        '
+      schema:
+        type: string
+      required: false
+    - $ref: '#/components/parameters/APIVersionHeader'
+    - $ref: '#/components/parameters/LimitQueryParam'
+    - $ref: '#/components/parameters/CursorQueryParam'
+    - name: payout_id
+      in: path
+      description: The unique identifier for the payout, retrieved from a [Payout Report](https://docs.joinforage.app/reference/get-payout-report).
+      required: true
+      schema:
+        type: string
+    get:
+      tags:
+      - Reports
+      summary: Retrieve a Payout Transaction Report
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request GET \\\n    --url 'https://api.sandbox.joinforage.app/reporting/payouts/27/transactions/?limit=1&cursor=cJ0xMDIzLZAxLTMxKzIxLTNBMzElM0ExNC40NTUxNjMlMkIwMCUzQTAp' \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json'\n"
+      description: 'A `GET` request to `/reporting/payouts/{payout_id}/transactions/` retrieves a Payout Transaction Report.
+
+
+        A Payout Transaction Report includes a list of all transactions associated with the provided `payout_id`.
+
+
+        Forage defines a transaction as any financial operation that triggers a flow of funds, including both EBT purchases and EBT refunds.
+
+
+        > ⚠️ Credit/Debit Settlement Handled By PSP
+
+        >
+
+        > Credit and debit card transactions are included in the report if the transaction occurred via a Fully Hosted integration, but Forage is never involved in the settlement flow for credit/debit. That falls to the credit/debit PSP, so balance your credit/debit accounting against the PSP’s ledger.'
+      operationId: reporting:transactions_by_payout
+      security:
+      - OAuth2:
+        - reporting
+        - internal
+      responses:
+        '200':
+          $ref: '#/components/responses/PayoutTransactionReport200'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_filters:
+                  summary: Invalid Filter
+                  value:
+                    path: /reporting/payouts/{payout_id}/transactions/
+                    errors:
+                    - code: invalid_filters
+                      message: '{filter}: required filter is missing'
+                      source:
+                        resource: Reports
+                        ref: ''
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /reporting/payouts/{payout_id}/transactions/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Reports
+                        ref: '{payout_id}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /reporting/payouts/{payout_id}/transactions/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+        '401':
+          description: __Unauthorized__
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /reporting/payouts/{payout_id}/transactions/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                resource_not_found:
+                  summary: Resource Not Found
+                  value:
+                    path: /reporting/payouts/{payout_id}/transactions/
+                    errors:
+                    - code: resource_not_found
+                      message: Payout with ID {payout_id} does not exist for current Merchant with FNS {fns_number}
+                    source:
+                      resource: Reports
+                      ref: '{payout_id}'
+        '429':
+          description: __Too Many Requests__
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /reporting/payouts/{payout_id}/transactions/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Reports
+                        ref: ''
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                secure_storage_inaccessible:
+                  summary: Secure Storage Inaccessible
+                  value:
+                    path: /reporting/payouts/{payout_id}/transactions/
+                    errors:
+                    - code: secure_storage_inaccessible
+                      message: Temporarily unable to access data in secure storage. Please try again.
+                      source:
+                        resource: Reports
+                        ref: ''
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /reporting/payouts/{payout_id}/transactions/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unable to continue
+                      source:
+                        resource: Reports
+                        ref: ''
+  /reporting/transactions/:
+    parameters:
+    - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+    - name: Merchant-Account
+      in: header
+      description: 'Either the merchant''s FNS number, or a unique merchant ID that Forage provides during onboarding, as in `123ab45c67`.
+
+
+        If querying on behalf of a platform that supports multiple merchants, then omitting this header returns platform-wide results. You must indicate a `Merchant-Account` header to retrieve results for a specific merchant on a platform.
+
+        '
+      schema:
+        type: string
+      required: false
+    - $ref: '#/components/parameters/APIVersionHeader'
+    - $ref: '#/components/parameters/StartDateQueryParam'
+    - $ref: '#/components/parameters/EndDateQueryParam'
+    - $ref: '#/components/parameters/LimitQueryParam'
+    - $ref: '#/components/parameters/CursorQueryParam'
+    get:
+      tags:
+      - Reports
+      summary: Retrieve a Transaction Report
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request GET \\\n    --url 'https://api.sandbox.joinforage.app/reporting/transactions/?start_date=2021-01-31&end_date=2021-02-28&limit=1&cursor=cJ0xMDIzLZAxLTMxKzIxLTNBMzElM0ExNC40NTUxNjMlMkIwMCUzQTAp' \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json'\n"
+      description: 'A `GET` request to `/reporting/transactions/` retrieves a Transaction Log.
+
+
+        On success, the API returns a list of transactions created between the provided `start_date` and `end_date`.
+
+
+        Forage defines a transaction as any financial operation that triggers a flow of funds, including both EBT purchases and EBT refunds. A Transaction Report is useful for reconciling your accounting books against the Forage ledger. The fee field can help finance teams reconcile the payouts received from Forage.
+
+
+        > ⚠️ Credit/Debit Settlement Handled By PSP
+
+        >
+
+        > Credit and debit card transactions are included in the report if the transaction occurred via a Fully Hosted integration, but Forage is never involved in the settlement flow for credit/debit. That falls to the credit/debit PSP, so balance your credit/debit accounting against the PSP’s ledger.'
+      operationId: reporting:transactions
+      security:
+      - OAuth2:
+        - reporting
+        - internal
+      responses:
+        '200':
+          $ref: '#/components/responses/TransactionReport200'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_filters:
+                  summary: Invalid Filter
+                  value:
+                    path: /reporting/transactions/
+                    errors:
+                    - code: invalid_filters
+                      message: '{filter}: required filter is missing'
+                      source:
+                        resource: Reports
+                        ref: ''
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /reporting/transactions/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Reports
+                        ref: ''
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /reporting/transactions/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+        '401':
+          description: __Unauthorized__
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /reporting/transactions/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '429':
+          description: __Too Many Requests__
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /reporting/transactions/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Reports
+                        ref: ''
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                secure_storage_inaccessible:
+                  summary: Secure Storage Inaccessible
+                  value:
+                    path: /reporting/transactions/
+                    errors:
+                    - code: secure_storage_inaccessible
+                      message: Temporarily unable to access data in secure storage. Please try again.
+                      source:
+                        resource: Reports
+                        ref: ''
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /reporting/transactions/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unable to continue
+                      source:
+                        resource: Reports
+                        ref: ''
+components:
+  parameters:
+    StatusQueryParam:
+      name: status
+      in: query
+      description: The status of the `Orders` to be returned in the response. `succeeded` is the only currently supported value, instructing the `start_date` and `end_date` params to refer to the order’s `success_date`, rather than its `created` value. The `status` filter has no effect if any other value is applied or if excluded from the request.
+      required: false
+      schema:
+        type: string
+    LimitQueryParam:
+      name: limit
+      in: query
+      description: 'The maximum number of objects to include in the `results` array. Not to exceed `1000`. If the limit exceeds `1000`, then Forage returns a `400` error response.
+
+
+        Defaults to `100`.
+
+        '
+      required: false
+      schema:
+        type: integer
+        default: 100
+    AuthenticationBearerTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 [authentication token](https://docs.joinforage.app/docs/authentication#authentication-tokens) that validates the request. Send a `POST` to the [`/o/token/`](https://docs.joinforage.app/reference/create-authentication-token) endpoint to generate an authentication token. Pass the token in this header after the word `Bearer` and a whitespace, for example `Bearer <api_key>`.
+      schema:
+        type: string
+      required: true
+    StartDateQueryParam:
+      name: start_date
+      in: query
+      description: 'The date that the reporting period starts, represented as an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) UTC date string, inclusive. The result set includes all reported items that occurred on the date.
+
+        '
+      required: true
+      schema:
+        type: string
+        format: date
+    EndDateQueryParam:
+      name: end_date
+      in: query
+      description: 'The date that the reporting period ends, represented as an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) UTC date string, inclusive. The result set includes all reported items that occurred on the date.
+
+        '
+      required: true
+      schema:
+        type: string
+        format: date
+    APIVersionHeader:
+      name: API-Version
+      in: header
+      description: 'The [Forage version](https://docs.joinforage.app/reference/version-history), represented as a string with the format of a `YYYY-MM-DD` date.
+
+
+        If not specified in the request header, then the version defaults to the value set in the Forage dashboard.
+
+        '
+      schema:
+        type: string
+      required: false
+    CursorQueryParam:
+      name: cursor
+      in: query
+      description: The starting point for the `results`, as returned in a previous `/reporting/` request. Find a cursor in the URL returned in the `next` and/or `previous` response values.
+      schema:
+        type: string
+  schemas:
+    PaginatedReportCommonFields:
+      properties:
+        next:
+          type:
+          - string
+          - 'null'
+          description: 'A URL that you can send a `GET` to in order to retrieve the next set of results. Alternatively, you can retrieve the `cursor` value from the URL and pass it in the body of a new request.
+
+
+            This value is `null` if there are no more results.
+
+            '
+        previous:
+          type:
+          - string
+          - 'null'
+          description: 'A URL that you can send a `GET` to in order to retrieve the previous set of results. Alternatively, you can retrieve the `cursor` value from the URL and pass it in the body of a new request.
+
+
+            This value is `null` if the response includes the first set of results.
+
+            '
+    ExternalOrderIDField:
+      type: string
+      maxLength: 64
+      description: 'A unique identifier for the order as created by the merchant or platform (not Forage).
+
+
+        When a merchant or platform passes this order ID to Forage, it persists in each Forage transaction related to the `Order`. This field enables merchants to map order IDs in their system to corresponding Forage `Order` IDs.
+
+
+        **You must build with Forage Version `2023-05-15` or later to use `external_order_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.
+
+        '
+    PayoutReportResponse:
+      allOf:
+      - $ref: '#/components/schemas/PaginatedReportCommonFields'
+      - type: object
+        properties:
+          next:
+            example: https://api.sandbox.joinforage.app/reporting/payouts/?cursor=cD0yMDIzLTAxLTMxKzIxJTNBMzElM0ExNC40NTUxNjMlMkIwMCUzQTAw&end_date=2021-02-28&start_date=2021-01-31
+          previous:
+            example: null
+          results:
+            type: array
+            items:
+              type: object
+              properties:
+                payout_id:
+                  type: string
+                  description: 'A unique identifier for the payout that this transaction is associated with.
+
+                    '
+                  example: f73a3abc01
+                merchant_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash identifying the merchant associated with this transaction. Blank if the settlement reflects a platform instead of a merchant payout.
+
+                    '
+                  example: gxe37pc24y
+                fns_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: The FNS number of the merchant. Blank if the settlement reflects a platform instead of a merchant payout.
+                  example: '1234567'
+                payout_issued_date:
+                  type:
+                  - string
+                  - 'null'
+                  format: date
+                  description: A timestamp of when the payout was created.
+                expected_deposit_date:
+                  type:
+                  - string
+                  - 'null'
+                  format: date
+                  description: A timestamp of when Forage expects the payout to be deposited. This is typically the payout_issued_date plus one business day, if the ACH method is next-day.
+                total_purchases:
+                  type: string
+                  format: decimal
+                  description: The total amount in USD of all of the purchases included in this payout.
+                  example: '99.99'
+                total_refunds:
+                  type: string
+                  format: decimal
+                  description: The total amount in USD of all of the refunds included in this payout.
+                  example: '15.11'
+                total_void_purchases:
+                  type: string
+                  format: decimal
+                  description: The total amount in USD refunded to customers due to a voided purchase initiated by Forage or the server.
+                  example: '1.12'
+                total_void_refunds:
+                  type: string
+                  format: decimal
+                  description: The total amount in USD debited from customers due to a voided refund initiated by Forage or the server.
+                  example: '0.22'
+                total_chargebacks:
+                  type: string
+                  format: decimal
+                  description: The total amount in USD of refunds paid to customers as the result of dispute resolutions during this payout period. The `total_chargebacks` value is distinct and not included in the `total_refunds` value.
+                  example: '0.00'
+                forage_fee:
+                  type: string
+                  format: decimal
+                  description: The amount of Forage fees applied to the transaction
+                  example: '2.31'
+                total_positive_adjustments:
+                  type: string
+                  format: decimal
+                  description: 'If any, the total arbitrary amount in USD that has been added to the settlement.
+
+                    For example, this could happen in the rare case that Forage corrects a previous settlement.
+
+                    '
+                total_negative_adjustments:
+                  type: string
+                  format: decimal
+                  description: 'If any, the total arbitrary amount in USD that has been deducted from the settlement.
+
+
+                    For example, this could happen in the rare case that Forage corrects a previous settlement.
+
+                    '
+                merchant_net_settlement:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: 'The net amount sent to the merchant, equal to the sum of purchases minus refunds, chargebacks, fees, and any other deductions.
+
+
+                    This value is `null` if the settlement reflects a platform instead of a merchant payout.
+
+                    '
+                  example: '21.29'
+                platform_net_settlement:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: 'The net amount sent to the platform, if applicable, equal to the sum of purchases minus refunds, chargebacks, fees, and any other deductions.
+
+
+                    This value is `null` if the settlement reflects a merchant payout and no platform was involved.
+
+                    '
+                  example: '2.37'
+                merchant_destination_account_ref:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash for the merchant''s destination bank account. `null` if settled to a platform account.
+
+                    '
+                  example: c45b20e98a
+    ExternalLocationIDField:
+      type: string
+      description: 'A unique identifier, provided by the merchant or platform (not Forage), that indicates the physical fulfillment location for the order. For example, this field could specify which location of a grocery store chain fulfilled an order.
+
+        '
+      example: 6e3b2ff7-51c8-4c64-befa-2eac90f7c3e9
+    ErrorResponseObject:
+      type: object
+      description: An object that includes details about the error.
+      properties:
+        path:
+          type: string
+          description: The requested endpoint.
+        errors:
+          $ref: '#/components/schemas/ErrorsArray'
+    TransactionReportResponse:
+      allOf:
+      - $ref: '#/components/schemas/PaginatedReportCommonFields'
+      - type: object
+        properties:
+          next:
+            example: https://api.sandbox.joinforage.app/reporting/transactions/?cursor=cD0yMDIzLTAxLTMxKzIxJTNBMzElM0ExNC40NTUxNjMlMkIwMCUzQTAw&end_date=2021-02-28&start_date=2021-01-31
+          previous:
+            example: null
+          results:
+            type: array
+            items:
+              type: object
+              properties:
+                merchant_id:
+                  type: string
+                  description: 'A 10-character unique hash identifying the merchant associated with this transaction. Blank if the settlement reflects a platform instead of a merchant payout.
+
+                    '
+                  example: gxe37pc24y
+                fns_id:
+                  type: string
+                  description: The FNS number of the merchant that received the payout including this transaction. Blank if the settlement reflects a platform instead of a merchant payout.
+                  example: '1234567'
+                merchant_group_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: The unique identifier of the merchant group associated with this transaction, provided by Forage.
+                  example: 3hsk173gs8
+                corporation_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: The unique identifier of the corporation associated with this transaction, provided by Forage.
+                  example: 6sjqk816dj
+                recorded_date:
+                  type: string
+                  format: date-time
+                  description: The date and time of the transaction, formatted as an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) string in the UTC timezone.
+                  example: '2024-11-04T14:00:00Z'
+                payout_issued_date:
+                  type:
+                  - string
+                  - 'null'
+                  format: date
+                  description: The timestamp of when the payout was created. (Value only populated for Payout Transaction Reports)
+                expected_deposit_date:
+                  type:
+                  - string
+                  - 'null'
+                  format: date
+                  description: 'The timestamp of when Forage expects the payout to be deposited. This is typically the payout_issued_date plus one business day, if the ACH method is next-day.
+
+                    (Value only populated for Payout Transaction Reports)
+
+                    '
+                transaction_type:
+                  type: string
+                  description: 'The type of the transaction. Must be one of the following:
+
+
+                    - `Purchase`
+
+                    - `Purchase_With_Cash_Back`
+
+                    - `Refund`
+
+                    - `Withdrawal`
+
+                    - `Chargeback`
+
+                    - `Void_Purchase`
+
+                    - `Void_Refund`
+
+                    - `Negative_adjustment`
+
+                    - `Positive_adjustment`
+
+                    - `Balance_Inquiry_Fee`
+
+                    - `Refund_Processing_Fee`
+
+                    - `Canceled_Purchase`
+
+
+                    See our [Transaction types guide](https://docs.joinforage.app/docs/transaction-type-and-payment-method#transaction-types) for details on credit/debit flow.
+
+                    '
+                  example: Purchase
+                payment_method:
+                  type: string
+                  description: 'The payment method used for the transaction. Must be one of the following:
+
+
+                    - `SNAP`
+
+                    - `EBT_Cash`
+
+                    - `Credit_Debit`
+
+                    - `Payfac_Credit_Debit`
+
+                    - `HSA`
+
+                    - `FSA`
+
+
+                    If the `transaction_type` is one of the following, `payment_method` will be `""`:
+
+
+                    - `Positive_adjustment`
+
+                    - `Negative_adjustment`
+
+                    - `Balance_Inquiry_Fee`
+
+                    - `Refund_Processing_Fee`
+
+
+                    _Note:_ `Credit_Debit` and `Payfac_Credit_Debit` are only applicable for transactions in Fully Hosted integrations.
+
+                    '
+                  example: SNAP
+                transaction_amount:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: The total amount in USD charged, voided, or refunded to the customer.
+                  example: '24.15'
+                forage_fee:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: The amount of Forage fees applied to the transaction.
+                  example: '0.34'
+                merchant_net_settlement:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: 'The net amount sent to the merchant, equal to the sum of purchases minus refunds, chargebacks, fees, and any other deductions.
+
+
+                    This value is `null` if the settlement reflects a platform instead of a merchant payout.
+
+                    '
+                  example: '21.29'
+                platform_net_settlement:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: 'The net amount sent to the platform, if applicable, equal to the sum of purchases minus refunds, chargebacks, fees, and any other deductions.
+
+
+                    This value is `null` if the settlement reflects a merchant payout and no platform was involved.
+
+                    '
+                  example: '2.37'
+                order_id:
+                  type: string
+                  description: 'A 10-character unique hash identifying the order for Fully Hosted and Custom integrations. Blank for SDK integrations.
+
+                    '
+                  example: a9a7226jm8
+                external_order_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'The unique identifier of the order as created by the merchant or platform (not Forage). This typically corresponds to an identifier in the merchant or platform''s database,
+
+                    so it can be used as a reference to look up the transaction.
+
+                    '
+                  example: abc123456
+                payment_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash identifying the related `Payment` or `OrderPayment`.
+
+                    '
+                  example: mn0yo1orjw
+                refund_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash identifying the related `Refund` or `OrderRefund`.
+
+                    '
+                  example: 56us47lbpo
+                chargeback_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash identifying the chargeback transaction. Present only when `transaction_type` is `Chargeback`.
+
+                    '
+                  example: luw8sozitr
+                merchant_payout_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash identifying the merchant payout. Present only in Payout Transaction Reports.
+
+                    '
+                  example: jakqbi64tv
+                platform_payout_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash identifying the platform payout. Present only if the transaction is part of a platform payout, and only in Payout Transaction Reports.
+
+                    '
+                  example: atn1ulwziv
+                merchant_destination_account_ref:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash for the merchant''s destination bank account. `null` if settled to a platform account.
+
+                    '
+                  example: c45b20e98a
+                external_location_id:
+                  $ref: '#/components/schemas/ExternalLocationIDField'
+                description:
+                  type: string
+                  description: A description of the transaction, as provided by the merchant or platform when the transaction was created.
+            required:
+            - merchant_id
+            - fns_id
+            - merchant_group_id
+            - corporation_id
+            - recorded_date
+            - payout_issued_date
+            - expected_deposit_date
+            - transaction_type
+            - payment_method
+            - transaction_amount
+            - forage_fee
+            - merchant_net_settlement
+            - platform_net_settlement
+            - order_id
+            - external_order_id
+            - refund_id
+            - chargeback_id
+            - merchant_payout_id
+            - platform_payout_id
+            - merchant_destination_account_ref
+            - description
+    ErrorsArray:
+      type: array
+      description: An array with information about the error.
+      items:
+        type: object
+        properties:
+          code:
+            type: string
+            description: A short string that represents the error.
+          message:
+            type: string
+            description: A developer-facing message with more details about the error, not to be displayed to customers.
+          source:
+            type: object
+            properties:
+              resource:
+                type: string
+                description: The type of the Forage resource involved in the error.
+              ref:
+                type: string
+                description: If applicable, the ten character reference hash of the Forage resource that caused the error. An empty string if no specific individual resource was involved.
+          details:
+            type: object
+            description: Additional details about the error, if applicable.
+      example: []
+    PayoutTransactionReportResponse:
+      allOf:
+      - $ref: '#/components/schemas/PaginatedReportCommonFields'
+      - type: object
+        properties:
+          next:
+            example: https://api.sandbox.joinforage.app/reporting/payouts/{payout_id}/transactions/?cursor=cD0yMDIzLTAxLTMxKzIxJTNBMzElM0ExNC40NTUxNjMlMkIwMCUzQTAw&end_date=2021-02-28&start_date=2021-01-31
+          previous:
+            example: null
+          results:
+            type: array
+            items:
+              type: object
+              properties:
+                merchant_id:
+                  type: string
+                  description: 'A 10-character unique hash identifying the merchant associated with this transaction. Blank if the settlement reflects a platform instead of a merchant payout.
+
+                    '
+                  example: gxe37pc24y
+                merchant_group_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: The unique identifier of the merchant group associated with this transaction, provided by Forage.
+                  example: 3hsk173gs8
+                corporation_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: The unique identifier of the corporation associated with this transaction, provided by Forage.
+                  example: 6sjqk816dj
+                fns_id:
+                  type: string
+                  description: The FNS number of the merchant that received the payout including this transaction. Blank if the settlement reflects a platform instead of a merchant payout.
+                  example: '1234567'
+                recorded_date:
+                  type: string
+                  format: date-time
+                  description: The date and time of the transaction, formatted as an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) string in the UTC timezone.
+                  example: '2024-11-04T14:00:00Z'
+                payout_issued_date:
+                  type:
+                  - string
+                  - 'null'
+                  format: date
+                  description: The timestamp of when the payout was created. (Value only populated for Payout Transaction Reports)
+                expected_deposit_date:
+                  type:
+                  - string
+                  - 'null'
+                  format: date
+                  description: 'The timestamp of when Forage expects the payout to be deposited. This is typically the payout_issued_date plus one business day, if the ACH method is next-day.
+
+                    (Value only populated for Payout Transaction Reports)
+
+                    '
+                transaction_type:
+                  type: string
+                  description: 'The type of the transaction. Must be one of the following:
+
+
+                    - `Purchase`
+
+                    - `Purchase_With_Cash_Back`
+
+                    - `Refund`
+
+                    - `Withdrawal`
+
+                    - `Chargeback`
+
+                    - `Void_Purchase`
+
+                    - `Void_Refund`
+
+                    - `Negative_adjustment`
+
+                    - `Positive_adjustment`
+
+                    - `Balance_Inquiry_Fee`
+
+                    - `Refund_Processing_Fee`
+
+
+                    See our [Transaction types guide](https://docs.joinforage.app/docs/transaction-type-and-payment-method#transaction-types) for details on credit/debit flow.
+
+                    '
+                  example: Purchase
+                payment_method:
+                  type: string
+                  description: 'The payment method used for the transaction. Must be one of the following:
+
+
+                    - `SNAP`
+
+                    - `EBT_Cash`
+
+                    - `Credit_Debit`
+
+                    - `Payfac_Credit_Debit`
+
+                    - `HSA`
+
+                    - `FSA`
+
+
+                    If the `transaction_type` is one of the following, `payment_method` will be `""`:
+
+
+                    - `Positive_adjustment`
+
+                    - `Negative_adjustment`
+
+                    - `Balance_Inquiry_Fee`
+
+                    - `Refund_Processing_Fee`
+
+
+                    _Note:_ `Credit_Debit` and `Payfac_Credit_Debit` are only applicable for transactions in Fully Hosted integrations.
+
+                    '
+                  example: SNAP
+                transaction_amount:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: The total amount in USD charged, voided, or refunded to the customer.
+                  example: '24.15'
+                forage_fee:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: The amount of Forage fees applied to the transaction.
+                  example: '0.34'
+                merchant_net_settlement:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: 'The net amount sent to the merchant, equal to the sum of purchases minus refunds, chargebacks, fees, and any other deductions.
+
+
+                    This value is `null` if the settlement reflects a platform instead of a merchant payout.
+
+                    '
+                  example: '21.29'
+                platform_net_settlement:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: 'The net amount sent to the platform, if applicable, equal to the sum of purchases minus refunds, chargebacks, fees, and any other deductions.
+
+
+                    This value is `null` if the settlement reflects a merchant payout and no platform was involved.
+
+                    '
+                  example: '2.37'
+                order_id:
+                  type: string
+                  description: 'A 10-character unique hash identifying the order for Fully Hosted and Custom integrations. Blank for SDK integrations.
+
+                    '
+                  example: a9a7226jm8
+                external_order_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'The unique identifier of the order as created by the merchant or platform (not Forage). This typically corresponds to an identifier in the merchant or platform''s database,
+
+                    so it can be used as a reference to look up the transaction.
+
+                    '
+                  example: abc123456
+                payment_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash identifying the related `Payment` or `OrderPayment`.
+
+                    '
+                  example: mn0yo1orjw
+                refund_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash identifying the related `Refund` or `OrderRefund`.
+
+                    '
+                  example: 56us47lbpo
+                chargeback_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash identifying the chargeback transaction. Present only when `transaction_type` is `Chargeback`.
+
+                    '
+                  example: luw8sozitr
+                merchant_payout_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash identifying the merchant payout. Present only in Payout Transaction Reports.
+
+                    '
+                  example: jakqbi64tv
+                platform_payout_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash identifying the platform payout. Present only if the transaction is part of a platform payout, and only in Payout Transaction Reports.
+
+                    '
+                  example: atn1ulwziv
+                merchant_destination_account_ref:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'A 10-character unique hash for the merchant''s destination bank account. `null` if settled to a platform account.
+
+                    '
+                  example: c45b20e98a
+                external_location_id:
+                  $ref: '#/components/schemas/ExternalLocationIDField'
+                description:
+                  type: string
+                  description: A description of the transaction, as provided by the merchant or platform when the transaction was created.
+            required:
+            - merchant_id
+            - fns_id
+            - merchant_group_id
+            - corporation_id
+            - recorded_date
+            - payout_issued_date
+            - expected_deposit_date
+            - transaction_type
+            - payment_method
+            - transaction_amount
+            - forage_fee
+            - merchant_net_settlement
+            - platform_net_settlement
+            - order_id
+            - external_order_id
+            - refund_id
+            - chargeback_id
+            - merchant_payout_id
+            - platform_payout_id
+            - merchant_destination_account_ref
+            - description
+    OrderAndTaxesReportResponse:
+      allOf:
+      - $ref: '#/components/schemas/PaginatedReportCommonFields'
+      - type: object
+        properties:
+          next:
+            example: https://api.sandbox.joinforage.app/reporting/orders/?cursor=cD0yMDIzLTAxLTMxKzIxJTNBMzElM0ExNC40NTUxNjMlMkIwMCUzQTAw&end_date=2021-02-28&start_date=2021-01-31
+          previous:
+            example: null
+          results:
+            type: array
+            description: An array of objects that detail information about each `Order` during the provided reporting period.
+            items:
+              type: object
+              properties:
+                ref:
+                  type: string
+                  description: A unique reference hash for the Forage `Order` object.
+                  example: b085e45a54
+                status:
+                  type: string
+                  description: 'The status of the order in the Forage lifecycle. One of:
+
+
+                    - `canceled`
+
+                    - `draft`
+
+                    - `failed`
+
+                    - `processing`
+
+                    - `succeeded`
+
+                    '
+                  enum:
+                  - canceled
+                  - draft
+                  - failed
+                  - processing
+                  - succeeded
+                  example: draft
+                snap_eligible_total:
+                  type: string
+                  format: decimal
+                  description: The SNAP-only eligible portion of the order cost in USD.
+                  example: '25.99'
+                ebt_cash_eligible_total:
+                  type: string
+                  format: decimal
+                  description: The EBT Cash-only eligible portion of the order cost in USD.
+                  example: '21.23'
+                remaining_total:
+                  type: string
+                  format: decimal
+                  description: The portion of the `Order` total, in USD, that is neither SNAP eligible nor EBT Cash eligible. This amount must be charged to a credit or debit card.
+                  example: '44.39'
+                sales_tax_applied:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: 'The amount of sales tax that Forage added to the order total, calculated after the customer distributed tender across payment methods.
+
+
+                    This value is always `0` for Custom integrations. Forage only calculates taxes for Fully Hosted integrations.
+
+
+                    If the value is nonzero, then some of the `ebt_cash_paid` or `credit_debit_paid` amount covered taxes. Per FNS regulations, `snap_paid` is tax-exempt. The sum of (`snap_paid`, `ebt_cash_paid`, `credit_debit_paid`) should always equal the sum of (`sales_tax_applied`, `snap_eligible_total`, `remaining_total`).
+
+
+                    _The value of this field is `null` if the `status` of the `Order` is not `succeeded` or `failed`_.
+
+                    '
+                  example: '5.12'
+                snap_paid:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: 'The portion of the order cost in USD that the customer paid for with SNAP benefits.
+
+
+                    _The value of this field is `null` if the `status` of the `Order` is not `succeeded` or `failed`_.
+
+                    '
+                  example: '86.29'
+                ebt_cash_paid:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: 'The portion of the order cost in USD that the customer paid for with EBT Cash benefits.
+
+
+                    _The value of this field is `null` if the `status` of the `Order` is not `succeeded` or `failed`_.
+
+                    '
+                  example: '15.22'
+                credit_debit_paid:
+                  type:
+                  - string
+                  - 'null'
+                  format: decimal
+                  description: 'The portion of the order cost in USD that the customer paid for with credit/debit card.
+
+
+                    _The value of this field is `null` if the `status` of the `Order` is not `succeeded` or `failed`_.
+
+                    '
+                  example: '67.90'
+                merchant_fns_number:
+                  type: string
+                  description: The FNS number of the merchant that created this order.
+                  example: '1234567'
+                created:
+                  type: string
+                  format: date-time
+                  description: A UTC timestamp of when the `Order` was created, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+                  example: '2021-06-15T00:11:50.000000Z'
+                success_date:
+                  type: string
+                  format: date-time
+                  description: A UTC timestamp of when all `OrderPayments` associated with the `Order` were successfully processed, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+                  example: '2021-06-16T00:11:50.000000Z'
+                payments:
+                  type: array
+                  description: An array of the unique reference hashes for any Forage `OrderPayments` associated with the `Order`.
+                  example:
+                  - cd62e45f33
+                  - a2f4e45665
+                  items:
+                    type: string
+                refunds:
+                  type: array
+                  description: An array of the unique reference hashes for any Forage `OrderRefunds` associated with the `Order`.
+                  example:
+                  - aaabe45432
+                  - 7e84e45db7
+                  items:
+                    type: string
+                psp_customer_id:
+                  type:
+                  - string
+                  - 'null'
+                  description: 'The third-party credit/debit payment processor’s unique identifier for the customer.
+
+
+                    _The value of this field is null if the `Order` was created via a POST to `/capture_sessions/`_
+
+
+                    **You must build with Forage Version `2023-05-15` or later to use `psp_customer_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.
+
+                    '
+                external_order_id:
+                  $ref: '#/components/schemas/ExternalOrderIDField'
+                external_location_id:
+                  $ref: '#/components/schemas/ExternalLocationIDField'
+            required:
+            - ref
+            - status
+            - snap_eligible_total
+            - ebt_cash_eligible_total
+            - remaining_total
+            - sales_tax_applied
+            - snap_paid
+            - ebt_cash_paid
+            - credit_debit_paid
+            - merchant_fns_number
+            - created
+            - payments
+            - refunds
+            - psp_customer_id
+  responses:
+    PayoutReport200:
+      description: __OK__ - Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PayoutReportResponse'
+    PayoutTransactionReport200:
+      description: __OK__ - Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PayoutTransactionReportResponse'
+    TransactionReport200:
+      description: __OK__ - Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TransactionReportResponse'
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your access token from the /o/token/ API, separated by whitespace.
+
+        '
+      flows:
+        password:
+          tokenUrl: /o/token/
+          scopes:
+            hosted_checkout: 'Scope for tokens used by merchant applications which allow Forage to manage split tender processing (i.e. EBT + Credit/Debit).
+
+              '
+            pinpad_only: 'Scope for tokens used by merchant applications which manage their own split tender (i.e. Forage Checkout is used only for EBT processing).
+
+              '
+        clientCredentials:
+          tokenUrl: /o/token/
+          scopes:
+            internal: 'Scope for tokens used by Forage internal applications.
+
+              '
+            pin-protected: 'Scope for tokens which can access secure storage.
+
+              '
+            disbursement: 'Scope for tokens which can disburse money to merchants.
+
+              '
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your JWT bearer token from the /api/session_token/ end-point, separated by whitespace.
+
+        '
+externalDocs:
+  description: Forage documentation
+  url: https://docs.joinforage.app/
+x-provenance:
+  method: searched
+  source: https://docs.joinforage.app/reference
+  harvested: '2026-10-14'
+  tool: harvest-readme-openapi.py
+  note: Assembled verbatim from the OpenAPI definition ReadMe embeds in each operation page of the provider's developer portal; paths and components merged by API title, nothing authored.
+  assembled_from:
+  - https://docs.joinforage.app/reference/authorize-a-payment.md
+  - https://docs.joinforage.app/reference/bulk-revoke-auth-tokens.md
+  - https://docs.joinforage.app/reference/cancel-a-payment.md
+  - https://docs.joinforage.app/reference/cancel-an-order-payment.md
+  - https://docs.joinforage.app/reference/cancel-order.md
+  - https://docs.joinforage.app/reference/capture-a-payment-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/capture-a-payment.md
+  - https://docs.joinforage.app/reference/create-a-payment.md
+  - https://docs.joinforage.app/reference/create-authentication-token.md
+  - https://docs.joinforage.app/reference/create-capture-session.md
+  - https://docs.joinforage.app/reference/create-custom-balance-check-session.md
+  - https://docs.joinforage.app/reference/create-payment-method.md
+  - https://docs.joinforage.app/reference/create-payment-refund.md
+  - https://docs.joinforage.app/reference/create-refunds-by-product.md
+  - https://docs.joinforage.app/reference/create-session-token.md
+  - https://docs.joinforage.app/reference/create-session.md
+  - https://docs.joinforage.app/reference/delete-payment-method.md
+  - https://docs.joinforage.app/reference/get-a-payment-refund.md
+  - https://docs.joinforage.app/reference/get-all-order-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payment-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payments.md
+  - https://docs.joinforage.app/reference/get-an-order-payment.md
+  - https://docs.joinforage.app/reference/get-an-order-refund.md
+  - https://docs.joinforage.app/reference/get-order-report.md
+  - https://docs.joinforage.app/reference/get-order.md
+  - https://docs.joinforage.app/reference/get-payment-details.md
+  - https://docs.joinforage.app/reference/get-payment-method.md
+  - https://docs.joinforage.app/reference/get-payout-report.md
+  - https://docs.joinforage.app/reference/get-payout-transaction-report.md
+  - https://docs.joinforage.app/reference/get-transaction-report.md
+  - https://docs.joinforage.app/reference/patch-update-an-order-payment.md
+  - https://docs.joinforage.app/reference/refund-entire-order.md
+  - https://docs.joinforage.app/reference/refund-partial-order.md
+  - https://docs.joinforage.app/reference/retrieve-all-payments-for-merchant-order-id.md
+  - https://docs.joinforage.app/reference/retrieve-state-card-details.md
+  - https://docs.joinforage.app/reference/revoke-authentication-token.md
+  - https://docs.joinforage.app/reference/submit-pin-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/update-a-payment.md
+  - https://docs.joinforage.app/reference/update-order.md
+  - https://docs.joinforage.app/reference/update-payment-method.md
+  - https://docs.joinforage.app/reference/view-balance-session.md
+  - https://docs.joinforage.app/reference/void-a-payment-custom-checkout.md
+  - https://docs.joinforage.app/reference/void-a-refund.md
+  merge:
+    pages: 43
+    deduped: 461
+    conflicts_kept_first: 0

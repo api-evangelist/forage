@@ -1,0 +1,1001 @@
+openapi: 3.2.0
+info:
+  title: Forage Payments Order Payments API
+  description: The Forage Payments API is a REST API for processing Electronic Benefits Transfer (EBT) payments (SNAP and EBT Cash) in your e-commerce or in-store application.
+  contact:
+    name: API Support
+    email: engineering@joinforage.com
+  version: '2025-08-04'
+servers:
+- url: https://{environment}.joinforage.app
+  variables:
+    environment:
+      default: api.sandbox
+      enum:
+      - api
+      - api.sandbox
+security: []
+tags:
+- name: Order Payments
+paths:
+  /api/orders/{order_ref}/payments/:
+    parameters:
+    - name: order_ref
+      in: path
+      description: A unique reference hash for the Forage Order object, returned when the order’s parent [Session](https://docs.joinforage.app/reference/forage-sessions) was created.
+      required: true
+      schema:
+        type: string
+        default: cc3175bfea
+    get:
+      parameters:
+      - $ref: '#/components/parameters/BearerTokenHeader'
+      - $ref: '#/components/parameters/MerchantAccountHeader'
+      - $ref: '#/components/parameters/APIVersionHeader'
+      tags:
+      - Order Payments
+      summary: Retrieve all OrderPayments for an Order
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request GET \\\n    --url https://api.sandbox.joinforage.app/api/orders/<order_ref>/payments/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json'\n"
+      description: 'A `GET` request to `/orders/{order_ref}/payments/` retrieves all `OrderPayments` associated with the provided `order_ref`.
+
+
+        On success, the API responds with an array of `OrderPayments`.'
+      operationId: GetAllPayments
+      security:
+      - OAuth2:
+        - hosted_checkout
+        - pinpad_only
+        - internal
+      responses:
+        '200':
+          description: __OK__ - Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderPaymentResponse'
+        '400':
+          description: __Bad request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/orders/{order_ref}/payments/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/payments/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/orders/{order_ref}/payments/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/payments/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+                unknown_fields_error:
+                  summary: Unknown Fields Error
+                  value:
+                    path: /api/orders/{order_ref}/payments/
+                    errors:
+                    - code: unknown_fields_error
+                      message: 'Unknown field(s) provided: {unknown_fields}'
+                      source:
+                        resource: Orders
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                expired_session_token:
+                  summary: Expired Session Token
+                  value:
+                    path: /api/orders/{order_ref}/payments/
+                    errors:
+                    - code: expired_session_token
+                      message: This token has expired
+                      source:
+                        resource: Session_Token
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/orders/{order_ref}/payments/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '404':
+          description: __Not Found__ - The requested resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              example:
+                path: /api/orders/{order_ref}/payments/
+                errors:
+                - code: resource_not_found
+                  message: Order with ref {order_ref} does not exist for current Merchant with FNS {fns_number}
+                  source:
+                    resource: Orders
+                    ref: '{order_ref}'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/orders/{order_ref}/payments/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/orders/{order_ref}/payments/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unknown exception from EBT network
+                      source:
+                        resource: Unknown
+      x-operation-id-source: normalized
+      x-operation-id-original: Get all payments
+  /api/orders/{order_ref}/payments/{payment_ref}/:
+    parameters:
+    - name: order_ref
+      in: path
+      description: A unique reference hash for the Forage `Order` object, returned when the order’s parent [`Session`](https://docs.joinforage.app/reference/forage-sessions) was created.
+      required: true
+      schema:
+        type: string
+    - name: payment_ref
+      in: path
+      description: A unique reference hash for the Forage `OrderPayment` object, returned when the [`OrderPayment` was created](https://docs.joinforage.app/reference/create-order-payment).
+      required: true
+      schema:
+        type: string
+    - $ref: '#/components/parameters/MerchantAccountHeader'
+    - $ref: '#/components/parameters/APIVersionHeader'
+    get:
+      parameters:
+      - $ref: '#/components/parameters/BearerTokenHeader'
+      tags:
+      - Order Payments
+      summary: Retrieve an OrderPayment
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request GET \\\n    --url https://api.sandbox.joinforage.app/api/orders/<order_ref>/payments/cc3175bfea/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json'\n"
+      description: A `GET` request to `/orders/{order_ref}/payments/{payment_ref}/` retrieves the specified `OrderPayment`.
+      operationId: GetAPayment
+      security:
+      - OAuth2:
+        - pinpad_only
+        - hosted_checkout
+        - internal
+      responses:
+        '200':
+          description: __OK__ - Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPaymentResponse'
+        '400':
+          description: __Bad request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+                unknown_fields_error:
+                  summary: Unknown Fields Error
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/
+                    errors:
+                    - code: unknown_fields_error
+                      message: 'Unknown field(s) provided: {unknown_fields}'
+                      source:
+                        resource: Orders
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                expired_session_token:
+                  summary: Expired Session Token
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/
+                    errors:
+                    - code: expired_session_token
+                      message: This token has expired
+                      source:
+                        resource: Session_Token
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                resource_not_found:
+                  summary: Resource Not Found
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/
+                    errors:
+                    - code: resource_not_found
+                      message: Order with ref {order_ref} does not exist for current Merchant with FNS {fns_number}
+                    source:
+                      resource: Orders
+                      ref: '{order_ref}'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unknown exception from EBT network
+                      source:
+                        resource: Unknown
+      x-operation-id-source: normalized
+      x-operation-id-original: Get a payment
+  /api/orders/{order_ref}/payments/{payment_ref}/cancel/:
+    parameters:
+    - name: order_ref
+      in: path
+      description: A unique reference hash for the Forage `Order` object, returned when the order’s parent [`Session`](https://docs.joinforage.app/reference/forage-sessions) was created.
+      required: true
+      schema:
+        type: string
+    - name: payment_ref
+      in: path
+      description: A unique reference hash for the Forage `OrderPayment` object, returned when the [`OrderPayment` was created](https://docs.joinforage.app/reference/create-order-payment).
+      required: true
+      schema:
+        type: string
+    - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+    - $ref: '#/components/parameters/MerchantAccountHeader'
+    - $ref: '#/components/parameters/IdempotencyKeyHeader'
+    post:
+      tags:
+      - Order Payments
+      summary: Cancel an OrderPayment
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request POST \\\n    --url https://api.sandbox.joinforage.app/api/orders/<order_ref>/payments/cc3175bfea/cancel/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'Idempotency-Key: <idempotency-key>' \\\n    --header 'accept: application/json'\n"
+      description: '> ⚠️ `OrderPayment`` Updates Must Be Server-Side
+
+        >
+
+        > To keep your app secure, requests to cancel an OrderPayment should only be generated on the server-side.
+
+
+        A `POST` request to `/orders/{order_ref}/payments/{payment_ref}/cancel/` cancels an existing `OrderPayment`.
+
+
+        An `OrderPayment` can only be cancelled if its `status` is `requires_confirmation` or `failed`. Because only payments in these unsuccessful states can be canceled, this endpoint has no financial side effects.
+
+
+        On success, the API responds with the original `OrderPayment` object.'
+      operationId: CancelAPayment
+      security:
+      - OAuth2:
+        - internal
+        - pinpad_only
+      responses:
+        '200':
+          description: __OK__ - Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPaymentResponse'
+        '400':
+          description: __Bad request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/cancel/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/cancel/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/cancel/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/cancel/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+                unknown_fields_error:
+                  summary: Unknown Fields Error
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/cancel/
+                    errors:
+                    - code: unknown_fields_error
+                      message: 'Unknown field(s) provided: {unknown_fields}'
+                      source:
+                        resource: Orders
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/cancel/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '403':
+          description: __Forbidden__
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: A string that describes the nature of the error.
+              example:
+                detail: You do not have permission to perform this action.
+        '404':
+          description: __Not Found__ - The requested resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              example:
+                path: /api/orders/{order_ref}/payments/{payment_ref}/cancel/
+                errors:
+                - code: resource_not_found
+                  message: Order with ref {order_ref} does not exist for current Merchant with FNS {fns_number}
+                  source:
+                    resource: Orders
+                    ref: '{order_ref}'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_change_request:
+                  summary: Cannot Change Request
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/cancel/
+                    errors:
+                    - code: cannot_change_request
+                      message: Two requests were submitted with the same idempotency key, but slightly different request bodies. Please use a new idempotency key if you intended to change the request body
+                      source:
+                        resource: Idempotency_Key
+        '423':
+          $ref: '#/components/responses/Error423'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/cancel/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/orders/{order_ref}/payments/{payment_ref}/cancel/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unknown exception from EBT network
+                      source:
+                        resource: Unknown
+      x-operation-id-source: normalized
+      x-operation-id-original: Cancel a payment
+components:
+  schemas:
+    ErrorResponseObject:
+      type: object
+      description: An object that includes details about the error.
+      properties:
+        path:
+          type: string
+          description: The requested endpoint.
+        errors:
+          $ref: '#/components/schemas/ErrorsArray'
+    OrderPaymentResponse:
+      allOf:
+      - $ref: '#/components/schemas/OrderPaymentRequest'
+      - type: object
+        properties:
+          ref:
+            type: string
+            description: 'A unique reference hash for the Forage `OrderPayment` object.
+
+
+              _Note:_ `receipt.ref_number` equals `ref`.
+
+              '
+            example: cc3175bfea
+          status:
+            type: string
+            description: 'The status of the `OrderPayment`. One of:
+
+
+              - `authorized`: The `OrderPayment` has been authorized, but not yet captured. Only applicable to HSA/FSA payments, which use an authorize-then-capture flow.
+
+              - `canceled`: The `OrderPayment` object can''t be used.
+
+              - `failed`: If the error is temporary, then this `OrderPayment` can be resubmitted for capture without modification. Check the `receipt.message` field for a description of the error.
+
+              - `processing`: The outcome of the `OrderPayment` is pending.
+
+              - `requires_confirmation`: The `OrderPayment` hasn''t been submitted for processing.
+
+              - `succeeded`: The `OrderPayment` has been successfully processed and will be included in settlement. It can''t be changed.
+
+              '
+            enum:
+            - authorized
+            - canceled
+            - failed
+            - processing
+            - requires_confirmation
+            - succeeded
+            example: requires_confirmation
+          last_processing_error:
+            type:
+            - object
+            - 'null'
+            description: The code and message values corresponding to the most recent [Payments API error](https://docs.joinforage.app/reference/errors#payments-api-errors).
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+          created:
+            type: string
+            format: date-time
+            description: A UTC timestamp, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string, of when the `OrderPayment` was created.
+            example: '2021-06-16T00:11:50.000000Z'
+          updated:
+            type: string
+            format: date-time
+            description: A UTC timestamp, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string, of when the `OrderPayment` was last modified.
+            example: '2021-06-16T00:11:50.000000Z'
+          success_date:
+            type:
+            - string
+            - 'null'
+            format: date-time
+            description: A UTC timestamp, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string, of when the `status` of the `OrderPayment` is `succeeded`. This value is always `null` when the `OrderPayment` is first created.
+            example: '2021-06-16T00:11:50.000000Z'
+          tpp_lookup_id:
+            type:
+            - string
+            - 'null'
+            description: 'This value is always null for `OrderPayments` resulting from Custom Sessions. It’s most relevant to Fully Hosted Sessions, which process credit/debit payments.
+
+
+              A value that merchants can use to associate this payment with a credit/debit payment processed by a third party processor.
+
+
+              For Stripe integrations, this is the client secret for a [`PaymentIntent`](https://stripe.com/docs/api/payment_intents).
+
+              '
+            example: pi_1DpdZq2eZvKYlo2CAYyzTr8j_secret_lxr4crBJP4txbrg7sqit0XQQO
+          order:
+            type: string
+            description: A unique reference hash for the parent `Order`, as passed in the request to create the `OrderPayment`.
+            example: 340129aff3
+          merchant:
+            type: string
+            description: The FNS (Food and Nutrition Service) number of the merchant associated with this `OrderPayment`.
+          amount:
+            type:
+            - string
+            - 'null'
+            format: decimal
+            description: The amount charged to the payment method, in USD. Null until the payment is captured.
+          merchant_fixed_settlement:
+            type:
+            - string
+            - 'null'
+            format: decimal
+            description: The fixed amount in USD restored to the merchant from EBT Cash payments before the `platform_fee` split. Null when not set.
+          platform_fixed_settlement:
+            type:
+            - string
+            - 'null'
+            format: decimal
+            description: The fixed amount in USD the platform takes from EBT Cash payments before the `platform_fee` split. Null when not set.
+          external_location_id:
+            description: A unique identifier, provided by the merchant or platform (not Forage), that indicates the physical fulfillment location for the order. Null when not provided.
+        required:
+        - ref
+        - order
+        - merchant
+        - status
+        - created
+        - updated
+    OrderPaymentRequest:
+      type: object
+      description: This object represents a one-time payment, charged to a single payment method, associated with a specific Forage Order.
+      properties:
+        funding_type:
+          type: string
+          description: 'A string that represents the type of tender. One of:
+
+
+            - `benefit`
+
+            - `credit_tpp`
+
+            - `ebt_cash`
+
+            - `ebt_snap`
+
+            '
+          enum:
+          - benefit
+          - credit_payfac
+          - credit_tpp
+          - ebt_cash
+          - ebt_snap
+          - wic
+          default: ebt_snap
+        amount:
+          type: string
+          format: decimal
+          description: 'A positive decimal number that represents how much to charge the `PaymentMethod` in USD. Precision is supported to the penny.
+
+
+            This value must match the `ebt_cash_total` or `snap_total` value that was passed in the request that [created the Custom Capture Session](https://docs.joinforage.app/reference/create-capture-session), depending on the `funding_type`.
+
+
+            If you need to charge both funding types, then create an `OrderPayment` for each charge, using the same `order_ref` returned when the order''s parent [Payment Capture Session was created](https://docs.joinforage.app/reference/create-capture-session).
+
+
+            The minimum amount that can be charged is `0.01`.
+
+            '
+          example: '25.99'
+        description:
+          type: string
+          description: A string that describes the `OrderPayment`.
+          default: An EBT payment
+        metadata:
+          allOf:
+          - $ref: '#/components/schemas/MetadataObject'
+          - default: {}
+        payment_method:
+          type: string
+          description: The unique reference hash for the existing Forage [`PaymentMethod`](https://docs.joinforage.app/reference/payment-methods) that is to be charged in this transaction.
+          default: b16673fe21
+        customer_id:
+          $ref: '#/components/schemas/CustomerIDField'
+        external_order_id:
+          $ref: '#/components/schemas/ExternalOrderIDField'
+        merchant_fixed_settlement:
+          type:
+          - string
+          - 'null'
+          format: decimal
+          description: 'The fixed amount in USD that should be restored to the merchant from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny.
+
+            '
+          example: '5.11'
+        platform_fixed_settlement:
+          type:
+          - string
+          - 'null'
+          format: decimal
+          description: 'The fixed amount in USD that should be restored to the platform from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny.
+
+            '
+          example: '5.11'
+        external_location_id:
+          $ref: '#/components/schemas/ExternalLocationIDField'
+      required:
+      - funding_type
+      - amount
+      - description
+      - metadata
+      - payment_method
+    MetadataObject:
+      type: object
+      description: 'A required object containing merchant-defined key-value pairs to provide additional context for the payment.
+
+
+        Merchants should use this field to store **reference information** relevant to the transaction (for example, order details, system identifiers, or tracking data). This helps link the payment to records within their system.
+
+
+        Pass an empty object (`{}`) if no additional information is available.
+
+
+        > ⚠️ Personally Identifiable Information
+
+        >
+
+        > **Do not include personally identifiable information (PII)** such as names, emails, or payment details.
+
+        '
+    ExternalLocationIDField:
+      type: string
+      description: 'A unique identifier, provided by the merchant or platform (not Forage), that indicates the physical fulfillment location for the order. For example, this field could specify which location of a grocery store chain fulfilled an order.
+
+        '
+      example: 6e3b2ff7-51c8-4c64-befa-2eac90f7c3e9
+    CustomerIDField:
+      type: string
+      maxLength: 64
+      description: '**⚠️ If you’re integrating Forage with a POS Terminal, then do not use this param. It is only supported for online transactions.**
+
+
+        A unique identifier for the end customer making the payment.
+
+
+        Forage automatically adds the `customer_id` to the Session''s corresponding `Order` and `OrderPayments`.
+
+
+        This field helps Forage''s servers more quickly identify the customer associated with the request. While `customer_id` is not technically required, if you omit it then requests could take longer to process. **It is strongly recommended to pass customer_id.**
+
+
+        If you''re providing your internal customer ID, then we recommend that you hash the value before sending it on the payload.
+
+
+        Each customer should only have one unique `customer_id`. For example, if you create both a `PaymentMethod` and a Forage `Session` (Fully Hosted or Custom) or `Payment` (SDK) for the same customer, then the `customer_id` should be the same in both requests to ensure continuity of stored payment methods.
+
+        '
+    ExternalOrderIDField:
+      type: string
+      maxLength: 64
+      description: 'A unique identifier for the order as created by the merchant or platform (not Forage).
+
+
+        When a merchant or platform passes this order ID to Forage, it persists in each Forage transaction related to the `Order`. This field enables merchants to map order IDs in their system to corresponding Forage `Order` IDs.
+
+
+        **You must build with Forage Version `2023-05-15` or later to use `external_order_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.
+
+        '
+    ErrorsArray:
+      type: array
+      description: An array with information about the error.
+      items:
+        type: object
+        properties:
+          code:
+            type: string
+            description: A short string that represents the error.
+          message:
+            type: string
+            description: A developer-facing message with more details about the error, not to be displayed to customers.
+          source:
+            type: object
+            properties:
+              resource:
+                type: string
+                description: The type of the Forage resource involved in the error.
+              ref:
+                type: string
+                description: If applicable, the ten character reference hash of the Forage resource that caused the error. An empty string if no specific individual resource was involved.
+          details:
+            type: object
+            description: Additional details about the error, if applicable.
+      example: []
+  responses:
+    Error423:
+      description: __Locked__ - The request could not be completed because the target resource is currently locked.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseObject'
+          examples:
+            resource_locked:
+              summary: Resource Locked
+              value:
+                path: /api/example_path/
+                errors:
+                - code: resource_locked
+                  message: Request could not be completed because the resource is currently locked. Please try again later.
+                  source:
+                    resource: Idempotency_Key
+                    ref: ''
+  parameters:
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      description: An alphanumeric key that clients can use to identify repeated requests that are dropped in transit. Generate a distinct key for every unique request and only re-use keys for retries.
+      schema:
+        type: string
+      required: true
+    AuthenticationBearerTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 [authentication token](https://docs.joinforage.app/docs/authentication#authentication-tokens) that validates the request. Send a `POST` to the [`/o/token/`](https://docs.joinforage.app/reference/create-authentication-token) endpoint to generate an authentication token. Pass the token in this header after the word `Bearer` and a whitespace, for example `Bearer <api_key>`.
+      schema:
+        type: string
+      required: true
+    MerchantAccountHeader:
+      name: Merchant-Account
+      in: header
+      description: A unique merchant ID that Forage provides during onboarding, as in `123ab45c67`. The Merchant ID can be found in the Forage [sandbox](https://dashboard.sandbox.joinforage.app/login/) or [production](https://dashboard.joinforage.app/login/) dashboard.
+      schema:
+        type: string
+      required: true
+    APIVersionHeader:
+      name: API-Version
+      in: header
+      description: 'The [Forage version](https://docs.joinforage.app/reference/version-history), represented as a string with the format of a `YYYY-MM-DD` date.
+
+
+        If not specified in the request header, then the version defaults to the value set in the Forage dashboard.
+
+        '
+      schema:
+        type: string
+      required: false
+    BearerTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 bearer token that validates the request. You can use either a short-lived [session token](https://docs.joinforage.app/docs/authentication#session-tokens) if the request is coming from the front-end, or an [authentication token](https://docs.joinforage.app/docs/authentication#authentication-tokens) for server-side requests. Pass the token in this header after the word `Bearer` and a whitespace, for example `Bearer <api_key>`.
+      schema:
+        type: string
+      required: true
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your access token from the /o/token/ API, separated by whitespace.
+
+        '
+      flows:
+        password:
+          tokenUrl: /o/token/
+          scopes:
+            hosted_checkout: 'Scope for tokens used by merchant applications which allow Forage to manage split tender processing (i.e. EBT + Credit/Debit).
+
+              '
+            pinpad_only: 'Scope for tokens used by merchant applications which manage their own split tender (i.e. Forage Checkout is used only for EBT processing).
+
+              '
+        clientCredentials:
+          tokenUrl: /o/token/
+          scopes:
+            internal: 'Scope for tokens used by Forage internal applications.
+
+              '
+            pin-protected: 'Scope for tokens which can access secure storage.
+
+              '
+            disbursement: 'Scope for tokens which can disburse money to merchants.
+
+              '
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your JWT bearer token from the /api/session_token/ end-point, separated by whitespace.
+
+        '
+externalDocs:
+  description: Forage documentation
+  url: https://docs.joinforage.app/
+x-provenance:
+  method: searched
+  source: https://docs.joinforage.app/reference
+  harvested: '2026-10-14'
+  tool: harvest-readme-openapi.py
+  note: Assembled verbatim from the OpenAPI definition ReadMe embeds in each operation page of the provider's developer portal; paths and components merged by API title, nothing authored.
+  assembled_from:
+  - https://docs.joinforage.app/reference/authorize-a-payment.md
+  - https://docs.joinforage.app/reference/bulk-revoke-auth-tokens.md
+  - https://docs.joinforage.app/reference/cancel-a-payment.md
+  - https://docs.joinforage.app/reference/cancel-an-order-payment.md
+  - https://docs.joinforage.app/reference/cancel-order.md
+  - https://docs.joinforage.app/reference/capture-a-payment-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/capture-a-payment.md
+  - https://docs.joinforage.app/reference/create-a-payment.md
+  - https://docs.joinforage.app/reference/create-authentication-token.md
+  - https://docs.joinforage.app/reference/create-capture-session.md
+  - https://docs.joinforage.app/reference/create-custom-balance-check-session.md
+  - https://docs.joinforage.app/reference/create-payment-method.md
+  - https://docs.joinforage.app/reference/create-payment-refund.md
+  - https://docs.joinforage.app/reference/create-refunds-by-product.md
+  - https://docs.joinforage.app/reference/create-session-token.md
+  - https://docs.joinforage.app/reference/create-session.md
+  - https://docs.joinforage.app/reference/delete-payment-method.md
+  - https://docs.joinforage.app/reference/get-a-payment-refund.md
+  - https://docs.joinforage.app/reference/get-all-order-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payment-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payments.md
+  - https://docs.joinforage.app/reference/get-an-order-payment.md
+  - https://docs.joinforage.app/reference/get-an-order-refund.md
+  - https://docs.joinforage.app/reference/get-order-report.md
+  - https://docs.joinforage.app/reference/get-order.md
+  - https://docs.joinforage.app/reference/get-payment-details.md
+  - https://docs.joinforage.app/reference/get-payment-method.md
+  - https://docs.joinforage.app/reference/get-payout-report.md
+  - https://docs.joinforage.app/reference/get-payout-transaction-report.md
+  - https://docs.joinforage.app/reference/get-transaction-report.md
+  - https://docs.joinforage.app/reference/patch-update-an-order-payment.md
+  - https://docs.joinforage.app/reference/refund-entire-order.md
+  - https://docs.joinforage.app/reference/refund-partial-order.md
+  - https://docs.joinforage.app/reference/retrieve-all-payments-for-merchant-order-id.md
+  - https://docs.joinforage.app/reference/retrieve-state-card-details.md
+  - https://docs.joinforage.app/reference/revoke-authentication-token.md
+  - https://docs.joinforage.app/reference/submit-pin-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/update-a-payment.md
+  - https://docs.joinforage.app/reference/update-order.md
+  - https://docs.joinforage.app/reference/update-payment-method.md
+  - https://docs.joinforage.app/reference/view-balance-session.md
+  - https://docs.joinforage.app/reference/void-a-payment-custom-checkout.md
+  - https://docs.joinforage.app/reference/void-a-refund.md
+  merge:
+    pages: 43
+    deduped: 461
+    conflicts_kept_first: 0

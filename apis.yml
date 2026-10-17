@@ -187,8 +187,9 @@ common:
 
 apis:
 - name: Forage EBT SNAP Payments API
-  description: REST API to tokenize EBT cards, run PIN-secured balance inquiries, and create, capture, void, and refund EBT SNAP, EBT Cash, and
-    HSA/FSA payments and orders for online and in-store checkout.
+  description: >-
+    REST API to tokenize EBT cards, run PIN-secured balance inquiries, and create, capture, void, and
+    refund EBT SNAP, EBT Cash, and HSA/FSA payments and orders for online and in-store checkout.
   humanURL: https://docs.joinforage.app/reference/introduction
   baseURL: https://api.joinforage.app
   tags:
@@ -217,7 +218,126 @@ apis:
   - type: JSONSchema
     url: json-schema/forage-error-response-object-schema.json
   aid: forage:forage-ebt-snap-payments-api
-
+- aid: forage:forage-bearer-tokens-api
+  name: Forage Bearer Tokens API
+  description: The Bearer Tokens API from Forage — 4 operation(s) for bearer tokens.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Bearer Tokens
+  properties:
+  - type: OpenAPI
+    url: openapi/forage-bearer-tokens-api-openapi.yml
+- aid: forage:forage-card-details-api
+  name: Forage Card Details API
+  description: The Card Details API from Forage — 1 operation(s) for card details.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Card Details
+  properties:
+  - type: OpenAPI
+    url: openapi/forage-card-details-api-openapi.yml
+- aid: forage:forage-custom-sessions-api
+  name: Forage Custom Sessions API
+  description: The Custom Sessions API from Forage — 3 operation(s) for custom sessions.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Custom Sessions
+  properties:
+  - type: OpenAPI
+    url: openapi/forage-custom-sessions-api-openapi.yml
+- aid: forage:forage-deferred-capture-api
+  name: Forage Deferred Capture API
+  description: The Deferred Capture API from Forage — 1 operation(s) for deferred capture.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Deferred Capture
+  properties:
+  - type: OpenAPI
+    url: openapi/forage-deferred-capture-api-openapi.yml
+- aid: forage:forage-fully-hosted-sessions-api
+  name: Forage Fully Hosted Sessions API
+  description: The Fully Hosted Sessions API from Forage — 1 operation(s) for fully hosted sessions.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Fully Hosted Sessions
+  properties:
+  - type: OpenAPI
+    url: openapi/forage-fully-hosted-sessions-api-openapi.yml
+- aid: forage:forage-order-payments-api
+  name: Forage Order Payments API
+  description: The Order Payments API from Forage — 3 operation(s) for order payments.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Order Payments
+  properties:
+  - type: OpenAPI
+    url: openapi/forage-order-payments-api-openapi.yml
+- aid: forage:forage-order-refunds-api
+  name: Forage Order Refunds API
+  description: The Order Refunds API from Forage — 4 operation(s) for order refunds.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Order Refunds
+  properties:
+  - type: OpenAPI
+    url: openapi/forage-order-refunds-api-openapi.yml
+- aid: forage:forage-orders-api
+  name: Forage Orders API
+  description: The Orders API from Forage — 2 operation(s) for orders.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Orders
+  properties:
+  - type: OpenAPI
+    url: openapi/forage-orders-api-openapi.yml
+- aid: forage:forage-payment-methods-api
+  name: Forage Payment Methods API
+  description: The Payment Methods API from Forage — 2 operation(s) for payment methods.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Payment Methods
+  properties:
+  - type: OpenAPI
+    url: openapi/forage-payment-methods-api-openapi.yml
+- aid: forage:forage-payment-refunds-api
+  name: Forage Payment Refunds API
+  description: The Payment Refunds API from Forage — 3 operation(s) for payment refunds.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Payment Refunds
+  properties:
+  - type: OpenAPI
+    url: openapi/forage-payment-refunds-api-openapi.yml
+- aid: forage:forage-reports-api
+  name: Forage Reports API
+  description: The Reports API from Forage — 4 operation(s) for reports.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Reports
+  properties:
+  - type: OpenAPI
+    url: openapi/forage-reports-api-openapi.yml
+- aid: forage:forage-sandbox-testing-api
+  name: Forage Sandbox Testing API
+  description: The Sandbox Testing API from Forage — 2 operation(s) for sandbox testing.
+  humanURL: https://docs.joinforage.app/reference/introduction
+  baseURL: https://api.joinforage.app
+  tags:
+  - Sandbox Testing
+  properties:
+  - type: OpenAPI
+    url: openapi/forage-sandbox-testing-api-openapi.yml
 x-enrichment:
   date: '2026-07-19'
   status: backfilled

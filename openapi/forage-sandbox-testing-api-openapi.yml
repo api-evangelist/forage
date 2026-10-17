@@ -1,0 +1,997 @@
+openapi: 3.2.0
+info:
+  title: Forage Payments Sandbox Testing API
+  description: The Forage Payments API is a REST API for processing Electronic Benefits Transfer (EBT) payments (SNAP and EBT Cash) in your e-commerce or in-store application.
+  contact:
+    name: API Support
+    email: engineering@joinforage.com
+  version: '2025-08-04'
+servers:
+- url: https://{environment}.joinforage.app
+  variables:
+    environment:
+      default: api.sandbox
+      enum:
+      - api
+      - api.sandbox
+security: []
+tags:
+- name: Sandbox Testing
+paths:
+  /api/payments/{payment_ref}/capture-sync/:
+    parameters:
+    - name: payment_ref
+      in: path
+      description: A unique reference hash for the Forage `Payment` object, returned when the [`Payment` was created](https://docs.joinforage.app/reference/create-a-payment).
+      required: true
+      schema:
+        type: string
+    - $ref: '#/components/parameters/BearerTokenHeader'
+    - $ref: '#/components/parameters/MerchantAccountHeader'
+    - $ref: '#/components/parameters/IdempotencyKeyHeader'
+    post:
+      tags:
+      - Sandbox Testing
+      summary: Capture a Payment during sandbox testing
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request POST \\\n    --url https://api.sandbox.joinforage.app/api/payments/cc3175bfea/capture-sync/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'Idempotency-Key: <idempotency-key>' \\\n    --header 'accept: application/json'\n"
+      description: 'A `POST` request to `/payments/{payment_ref}/capture-sync/` programmatically captures an existing `Payment` object.
+
+
+        Use this endpoint to automate sandbox testing.'
+      operationId: CaptureAPaymentDuringSandboxTesting
+      security:
+      - OAuth2:
+        - internal
+        - pinpad_only
+      - BearerAuth: []
+      responses:
+        '200':
+          description: __OK__ - Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/payments/{payment_ref}/capture-sync/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter unrecognized.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/payments/{payment_ref}/capture-sync/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account FNS number not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/payments/{payment_ref}/capture-sync/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/payments/{payment_ref}/capture-sync/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                expired_session_token:
+                  summary: Expired Session Token
+                  value:
+                    path: /api/payments/{payment_ref}/capture-sync/
+                    errors:
+                    - code: expired_session_token
+                      message: This token has expired
+                      source:
+                        resource: Session_Token
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/payments/{payment_ref}/capture-sync/
+                    errors:
+                    - code: invalid_token
+                      message: Invalid Token
+                      source:
+                        resource: OAuth_Access_Tokens
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_capture_payment:
+                  summary: Cannot Capture Payment
+                  value:
+                    path: /api/payments/{payment_ref}/capture-sync/
+                    errors:
+                    - code: cannot_capture_payment
+                      message: Payment with ref {payment_ref} is either processing, succeeded, or canceled and therefore cannot be captured.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                resource_not_found:
+                  summary: Payment Not Found
+                  value:
+                    path: /api/payments/{payment_ref}/capture-sync/
+                    errors:
+                    - code: resource_not_found
+                      message: Payment with ref {payment_ref} does not exist.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_change_request:
+                  summary: Cannot change request
+                  value:
+                    path: /api/payments/{payment_ref}/capture-sync/
+                    errors:
+                    - code: cannot_change_request
+                      message: Two requests were submitted with the same idempotency key, but slightly different request bodies. Please use a new idempotency key if you intended to change the request body
+                      source:
+                        resource: Idempotency_Key
+        '423':
+          $ref: '#/components/responses/Error423'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/payments/{payment_ref}/capture-sync/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Payments
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/payments/{payment_ref}/capture-sync/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unknown exception from EBT network
+                      source:
+                        resource: Payments
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                ebt_processor_timeout:
+                  summary: EBT processor timeout
+                  value:
+                    path: /api/payments/{payment_ref}/capture-sync/
+                    errors:
+                    - code: ebt_processor_timeout
+                      message: Unable to contact EBT processor, please try again shortly.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+      x-operation-id-source: normalized
+      x-operation-id-original: Capture a Payment during sandbox testing
+  /api/payments/{payment_ref}/collect_pin_backend/:
+    parameters:
+    - name: payment_ref
+      in: path
+      description: A unique reference hash for the Forage `Payment` object, returned when the [`Payment` was created](https://docs.joinforage.app/reference/create-a-payment).
+      required: true
+      schema:
+        type: string
+    - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+    - $ref: '#/components/parameters/MerchantAccountHeader'
+    - $ref: '#/components/parameters/IdempotencyKeyHeader'
+    post:
+      tags:
+      - Sandbox Testing
+      summary: Submit a test PIN during sandbox development
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request POST \\\n    --url https://api.sandbox.joinforage.app/api/payments/cc3175bfea/collect_pin_backend/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'Idempotency-Key: <idempotency-key>' \\\n    --header 'accept: application/json' \\\n    --header 'content-type: application/json' \\\n    --data '{\"pin\":\"1234\"}'\n"
+      description: '> ⚠️ Use For Sandbox Only
+
+        >
+
+        > Only use this endpoint during sandbox testing. It cannot be used in production.
+
+
+        A `POST` request to `/payments/{payment_ref}/collect_pin_backend/` programmatically associates a test PIN with an existing `Payment` object.
+
+
+        Use this endpoint to automate sandbox testing when you''re building an integration that defers payment capture to the server.'
+      operationId: SubmitPINDuringSandboxTesting
+      security:
+      - OAuth2:
+        - internal
+        - pinpad_only
+      requestBody:
+        $ref: '#/components/requestBodies/CollectPinBackend'
+      responses:
+        '200':
+          description: __OK__ - Success
+          content:
+            application/json:
+              schema:
+                type: object
+                items: {}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_parse_request_body:
+                  summary: Cannot Parse Request Body
+                  value:
+                    path: /api/payments/{payment_ref}/collect_pin_backend/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: Payment ref {payment_ref} requires a pin which is missing from capture request body
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                invalid_input_data:
+                  summary: Invalid input data
+                  value:
+                    path: /api/payments/{payment_ref}/collect_pin_backend/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter unrecognized.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/payments/{payment_ref}/collect_pin_backend/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account FNS number not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/payments/{payment_ref}/collect_pin_backend/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/payments/{payment_ref}/collect_pin_backend/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/payments/{payment_ref}/collect_pin_backend/
+                    errors:
+                    - code: invalid_token
+                      message: Invalid Token
+                      source:
+                        resource: OAuth_Access_Tokens
+        '403':
+          description: __Forbidden__
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: A string that describes the nature of the error.
+              example:
+                detail: You do not have permission to perform this action.
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                resource_not_found:
+                  summary: Payment Not Found
+                  value:
+                    path: /api/payments/{payment_ref}/collect_pin_backend/
+                    errors:
+                    - code: resource_not_found
+                      message: Payment with ref {payment_ref} does not exist.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_change_request:
+                  summary: Cannot change request
+                  value:
+                    path: /api/payments/{payment_ref}/collect_pin_backend/
+                    errors:
+                    - code: cannot_change_request
+                      message: Two requests were submitted with the same idempotency key, but slightly different request bodies. Please use a new idempotency key if you intended to change the request body
+                      source:
+                        resource: Idempotency_Key
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/payments/{payment_ref}/collect_pin_backend/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Payments
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/payments/{payment_ref}/collect_pin_backend/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unknown exception from EBT network
+                      source:
+                        resource: Payments
+      x-operation-id-source: normalized
+      x-operation-id-original: Submit PIN during sandbox testing
+components:
+  schemas:
+    ExternalLocationIDField:
+      type: string
+      description: 'A unique identifier, provided by the merchant or platform (not Forage), that indicates the physical fulfillment location for the order. For example, this field could specify which location of a grocery store chain fulfilled an order.
+
+        '
+      example: 6e3b2ff7-51c8-4c64-befa-2eac90f7c3e9
+    ErrorResponseObject:
+      type: object
+      description: An object that includes details about the error.
+      properties:
+        path:
+          type: string
+          description: The requested endpoint.
+        errors:
+          $ref: '#/components/schemas/ErrorsArray'
+    PaymentResponse:
+      allOf:
+      - $ref: '#/components/schemas/PaymentRequest'
+      - type: object
+        properties:
+          ref:
+            type: string
+            description: 'A unique reference hash for the Forage `Payment` object.
+
+
+              _Note:_ `receipt.ref_number` equals `ref`.
+
+
+              You need to pass this value to the front-end SDK method that captures the payment.
+
+              '
+          merchant:
+            type: string
+            description: A string that represents a unique merchant ID that Forage provides during onboarding.
+          status:
+            type: string
+            description: 'The status of the `Payment`. One of:
+
+
+              - `canceled`: The `Payment`object can''t be used.
+
+              - `failed`: If the error is temporary, then this `Payment` can be resubmitted for capture without modification. Check the `receipt.message` field for a description of the error.
+
+              - `processing`: The outcome of the `Payment` is pending.
+
+              - `requires_confirmation`: The `Payment` hasn''t been submitted for processing.
+
+              - `succeeded`: The `Payment` has been successfully processed and will be included in settlement. It can''t be changed.
+
+              - `authorized`: The `Payment` has been authorized, but not yet captured. Only applicable to HSA payments.
+
+              '
+            enum:
+            - requires_confirmation
+            - processing
+            - canceled
+            - succeeded
+            - failed
+            - authorized
+          created:
+            type: string
+            format: date-time
+            description: A UTC timestamp of when the `Payment` was created, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+          updated:
+            type: string
+            format: date-time
+            description: A UTC timestamp of that indicates when the `Payment` was last modified, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+          expires_at:
+            type:
+            - string
+            - 'null'
+            format: date-time
+            description: 'A UTC timestamp of when the `Payment` will expire if it is not captured or canceled, set to 30 minutes from when the `Payment` is created.
+
+
+              If the `status` of the `Payment` is `succeeded` or `canceled`, then the `expires_at` value is `null`.
+
+              '
+          success_date:
+            type:
+            - string
+            - 'null'
+            format: date-time
+            description: A UTC timestamp of when the `Payment` was successfully processed, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string. This value is `null` until the Payment enters the `succeeded` or `partial_capture` states.
+          refunds:
+            type: array
+            description: 'References to the `Refund`s attached to this payment. The format depends on the `with_refunds` query parameter:
+
+
+              - **Default behavior** (when `with_refunds` is `false` or omitted): Array of refund reference strings
+
+              - **Expanded behavior** (when `with_refunds=true`): Array of full `Refund` objects with complete refund details
+
+              '
+            items:
+              type: string
+              description: Refund reference string
+          receipt:
+            type:
+            - object
+            - 'null'
+            description: 'Most of the information that you''re required to display to the customer, according to FNS regulations.
+
+
+              This field is `null` if the data that populates the receipt is not yet available.
+
+
+              The total amount paid by the customer is `snap_amount` + `ebt_cash_amount` + `other_amount`. This amount will be settled with the merchant after applying Forage''s fees.
+
+              '
+          last_processing_error:
+            type:
+            - object
+            - 'null'
+            description: The `code` and `message` values corresponding to the most recent [Payments API error](https://docs.joinforage.app/reference/errors#payments-api-errors). Always `null` when the `Payment` is created.
+          previous_errors:
+            $ref: '#/components/schemas/ErrorsArray'
+          address_postal_code_check:
+            type:
+            - string
+            - 'null'
+            description: 'The result of any check done on the delivery address zip code. One of:
+
+              - `pass`: The provided information is correct and matches the data on file with the card issuer.
+
+              - `fail`: The provided information is incorrect and does not match the data on file.
+
+              - `unavailable`: The card issuer will not perform the check.
+
+              - `unchecked`: The information was provided but has not yet been checked by the card issuer.
+
+              '
+            enum:
+            - pass
+            - fail
+            - unavailable
+            - unchecked
+            example: pass
+          cvc_check:
+            type:
+            - string
+            - 'null'
+            description: 'The result of any check done on the CVC. One of:
+
+              - `pass`: The provided information is correct and matches the data on file with the card issuer.
+
+              - `fail`: The provided information is incorrect and does not match the data on file.
+
+              - `unavailable`: The card issuer will not perform the check.
+
+              - `unchecked`: The information was provided but has not yet been checked by the card issuer.
+
+              '
+            enum:
+            - pass
+            - fail
+            - unavailable
+            - unchecked
+            example: pass
+          delivery_address:
+            type:
+            - object
+            - 'null'
+            description: The delivery or pickup address for the order, passed to the EBT network. Returns an address object with `line1`, `line2`, `city`, `state`, `zipcode`, and `country`. Null when no delivery address is set.
+          is_delivery:
+            type:
+            - boolean
+            - 'null'
+            description: Whether the order is for delivery or pickup. Null when not specified.
+        required:
+        - ref
+        - status
+        - created
+        - updated
+      example:
+        amount: '25.99'
+        funding_type: ebt_snap
+        payment_method: ac47392bb1
+        delivery_address:
+          city: San Francisco
+          country: US
+          line1: 1856 Market St.
+          zipcode: '94106'
+          state: CA
+        is_delivery: true
+        description: An EBT Payment
+        metadata: {}
+        platform_fee: '0.05'
+        platform_fixed_settlement: '5.11'
+        merchant_fixed_settlement: '5.95'
+        customer_id: cus_1234567890
+        external_order_id: 1f2ee410-5b47-4130-aec2-40f5eb2108f5
+        merchant_destination_account: 1bdefaa456
+        pos_terminal:
+          provider_terminal_id: tbd123
+        external_location_id: 6e3b2ff7-51c8-4c64-befa-2eac90f7c3e9
+        ref: cc3175bfea
+        merchant: '9000055'
+        status: requires_confirmation
+        created: '2021-06-16T00:11:50.000000Z'
+        updated: '2021-06-16T00:11:50.000000Z'
+        expires_at: '2021-06-16T00:41:50.000000Z'
+        success_date: '2021-06-16T00:11:50.000000Z'
+        refunds:
+        - ac47392bb1
+        receipt:
+          ref_number: cc3175bfea
+          is_voided: true
+          snap_amount: '25.99'
+          ebt_cash_amount: '10.99'
+          other_amount: '5.99'
+          sales_tax_applied: '5.16'
+          balance:
+            snap: '72.94'
+            non_snap: '32.16'
+            updated: '2021-06-16T00:11:50.000000Z'
+          last_4: '3456'
+          message: Approved
+          transaction_type: Payment
+          created: '2021-06-16T00:11:50.000000Z'
+        last_processing_error: null
+        previous_errors: []
+    PaymentRequest:
+      type: object
+      description: This object represents a single payment. It is associated with a single payment method.
+      properties:
+        amount:
+          type: string
+          format: decimal
+          description: A positive decimal number that represents how much to charge the [`PaymentMethod`](https://docs.joinforage.app/reference/payment-methods) in USD. Precision is supported to the penny. The minimum amount that can be charged is `0.01`. To differentiate between a SNAP and an EBT Cash charge on the same EBT Card, use the `funding_type` field. If you need to charge both funding types, then create a `Payment` for each charge.
+        funding_type:
+          type: string
+          description: The payment instrument type. Use this field to differentiate between a SNAP (`ebt_snap`) and an EBT Cash (`ebt_cash`) charge on the same EBT Card. If you need to charge both funding types, then create a `Payment` for each charge. Use `credit_payfac` for all charges to HSA/FSA cards. `credit_tpp` is the funding type assigned to non-EBT payment objects created via a Fully Hosted Checkout integration.
+          enum:
+          - ebt_snap
+          - ebt_cash
+          - credit_tpp
+          - credit_payfac
+          - benefit
+          - wic
+        payment_method:
+          type: string
+          description: 'The unique reference hash for the existing Forage [`PaymentMethod`](https://docs.joinforage.app/reference/payment-methods) that is to be charged in this transaction.
+
+
+            ⚠️ **Exception**: POS integrations do not need to provide a `payment_method` when creating a payment.
+
+            '
+        delivery_address:
+          $ref: '#/components/schemas/DeliveryAddressData'
+        is_delivery:
+          type: boolean
+          description: '⚠️ **Exception**: If the purchase is made in-store via a POS Terminal, then a `is_delivery` is not required when creating a `Payment`.
+
+
+            Whether the order is for delivery or pickup. This information is required per FNS regulations. Defaults to `false` if not provided.
+
+            '
+        description:
+          type: string
+          description: A description of the payment.
+        metadata:
+          $ref: '#/components/schemas/MetadataObject'
+        platform_fee:
+          type: string
+          format: decimal
+          description: An optional field, for use by a platform supporting multiple merchants, that indicates the percentage cut of each payment that the platform charges as a fee.
+        platform_fixed_settlement:
+          type: string
+          format: decimal
+          description: The fixed amount in USD that a platform takes from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny.
+        merchant_fixed_settlement:
+          type: string
+          format: decimal
+          description: The fixed amount in USD that should be restored to the merchant from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny.
+        tpp_lookup_id:
+          type: string
+          description: 'An identifier for the credit/debit TPP.
+
+
+            For Stripe integrations, the client secret for a Stripe `PaymentIntent`.
+
+            '
+          example: pi_1DpdZq2eZvKYlo2CAYyzTr8j_secret_lxr4crBJP4txbrg7sqit0XQQO
+        customer_id:
+          $ref: '#/components/schemas/CustomerIDField'
+        external_order_id:
+          $ref: '#/components/schemas/ExternalOrderIDField'
+        merchant_destination_account:
+          type: string
+          description: 'A unique reference hash for the bank account that is to receive funds settlement for this payment. Use this field if you''re settling funds across multiple merchant bank accounts. Reach out to your Forage account manager for details on generating a hash.
+
+
+            Defaults to the hash for the default merchant bank account if not provided.
+
+            '
+        pos_terminal:
+          type: object
+          description: '**⚠️  This param is only supported for POS Terminal integrations. Do not use this param for online transactions.**
+
+
+            An object that details information about the POS Terminal that processes the payment.
+
+            '
+          properties:
+            provider_terminal_id:
+              type: string
+              description: A unique string that identifies the POS Terminal.
+        external_location_id:
+          $ref: '#/components/schemas/ExternalLocationIDField'
+      required:
+      - funding_type
+    DeliveryAddressData:
+      type: object
+      required:
+      - line1
+      - zipcode
+      description: '⚠️ **Exception**: If the purchase is made in-store via a POS Terminal, then a `delivery_address` is not required when creating a `Payment`.
+
+
+        The address for delivery or pickup of the `Order`. Per FNS regulations, this value must always be provided. If the `Order` is for pickup, then use the merchant address.
+
+        '
+      properties:
+        city:
+          type: string
+          description: The name of the city.
+        country:
+          type: string
+          description: Either `us` or `US`. Defaults to `US` if not provided.
+        line1:
+          type: string
+          description: The first line of the street address.
+        line2:
+          type:
+          - string
+          - 'null'
+          description: The second line of the street address.
+        zipcode:
+          type: string
+          description: The zip or postal code.
+        state:
+          type: string
+          description: The two-letter abbreviation, can be upper or lowercase, for the US state.
+    CollectPinBackendRequest:
+      type: object
+      properties:
+        pin:
+          type: string
+          description: A test four-digit PIN number, represented as a string.
+          example: '1234'
+      required:
+      - pin
+    ExternalOrderIDField:
+      type: string
+      maxLength: 64
+      description: 'A unique identifier for the order as created by the merchant or platform (not Forage).
+
+
+        When a merchant or platform passes this order ID to Forage, it persists in each Forage transaction related to the `Order`. This field enables merchants to map order IDs in their system to corresponding Forage `Order` IDs.
+
+
+        **You must build with Forage Version `2023-05-15` or later to use `external_order_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.
+
+        '
+    CustomerIDField:
+      type: string
+      maxLength: 64
+      description: '**⚠️ If you’re integrating Forage with a POS Terminal, then do not use this param. It is only supported for online transactions.**
+
+
+        A unique identifier for the end customer making the payment.
+
+
+        Forage automatically adds the `customer_id` to the Session''s corresponding `Order` and `OrderPayments`.
+
+
+        This field helps Forage''s servers more quickly identify the customer associated with the request. While `customer_id` is not technically required, if you omit it then requests could take longer to process. **It is strongly recommended to pass customer_id.**
+
+
+        If you''re providing your internal customer ID, then we recommend that you hash the value before sending it on the payload.
+
+
+        Each customer should only have one unique `customer_id`. For example, if you create both a `PaymentMethod` and a Forage `Session` (Fully Hosted or Custom) or `Payment` (SDK) for the same customer, then the `customer_id` should be the same in both requests to ensure continuity of stored payment methods.
+
+        '
+    MetadataObject:
+      type: object
+      description: 'A required object containing merchant-defined key-value pairs to provide additional context for the payment.
+
+
+        Merchants should use this field to store **reference information** relevant to the transaction (for example, order details, system identifiers, or tracking data). This helps link the payment to records within their system.
+
+
+        Pass an empty object (`{}`) if no additional information is available.
+
+
+        > ⚠️ Personally Identifiable Information
+
+        >
+
+        > **Do not include personally identifiable information (PII)** such as names, emails, or payment details.
+
+        '
+    ErrorsArray:
+      type: array
+      description: An array with information about the error.
+      items:
+        type: object
+        properties:
+          code:
+            type: string
+            description: A short string that represents the error.
+          message:
+            type: string
+            description: A developer-facing message with more details about the error, not to be displayed to customers.
+          source:
+            type: object
+            properties:
+              resource:
+                type: string
+                description: The type of the Forage resource involved in the error.
+              ref:
+                type: string
+                description: If applicable, the ten character reference hash of the Forage resource that caused the error. An empty string if no specific individual resource was involved.
+          details:
+            type: object
+            description: Additional details about the error, if applicable.
+      example: []
+  responses:
+    Error423:
+      description: __Locked__ - The request could not be completed because the target resource is currently locked.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseObject'
+          examples:
+            resource_locked:
+              summary: Resource Locked
+              value:
+                path: /api/example_path/
+                errors:
+                - code: resource_locked
+                  message: Request could not be completed because the resource is currently locked. Please try again later.
+                  source:
+                    resource: Idempotency_Key
+                    ref: ''
+  requestBodies:
+    CollectPinBackend:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CollectPinBackendRequest'
+  parameters:
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      description: An alphanumeric key that clients can use to identify repeated requests that are dropped in transit. Generate a distinct key for every unique request and only re-use keys for retries.
+      schema:
+        type: string
+      required: true
+    AuthenticationBearerTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 [authentication token](https://docs.joinforage.app/docs/authentication#authentication-tokens) that validates the request. Send a `POST` to the [`/o/token/`](https://docs.joinforage.app/reference/create-authentication-token) endpoint to generate an authentication token. Pass the token in this header after the word `Bearer` and a whitespace, for example `Bearer <api_key>`.
+      schema:
+        type: string
+      required: true
+    MerchantAccountHeader:
+      name: Merchant-Account
+      in: header
+      description: A unique merchant ID that Forage provides during onboarding, as in `123ab45c67`. The Merchant ID can be found in the Forage [sandbox](https://dashboard.sandbox.joinforage.app/login/) or [production](https://dashboard.joinforage.app/login/) dashboard.
+      schema:
+        type: string
+      required: true
+    BearerTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 bearer token that validates the request. You can use either a short-lived [session token](https://docs.joinforage.app/docs/authentication#session-tokens) if the request is coming from the front-end, or an [authentication token](https://docs.joinforage.app/docs/authentication#authentication-tokens) for server-side requests. Pass the token in this header after the word `Bearer` and a whitespace, for example `Bearer <api_key>`.
+      schema:
+        type: string
+      required: true
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your access token from the /o/token/ API, separated by whitespace.
+
+        '
+      flows:
+        password:
+          tokenUrl: /o/token/
+          scopes:
+            hosted_checkout: 'Scope for tokens used by merchant applications which allow Forage to manage split tender processing (i.e. EBT + Credit/Debit).
+
+              '
+            pinpad_only: 'Scope for tokens used by merchant applications which manage their own split tender (i.e. Forage Checkout is used only for EBT processing).
+
+              '
+        clientCredentials:
+          tokenUrl: /o/token/
+          scopes:
+            internal: 'Scope for tokens used by Forage internal applications.
+
+              '
+            pin-protected: 'Scope for tokens which can access secure storage.
+
+              '
+            disbursement: 'Scope for tokens which can disburse money to merchants.
+
+              '
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your JWT bearer token from the /api/session_token/ end-point, separated by whitespace.
+
+        '
+externalDocs:
+  description: Forage documentation
+  url: https://docs.joinforage.app/
+x-provenance:
+  method: searched
+  source: https://docs.joinforage.app/reference
+  harvested: '2026-10-14'
+  tool: harvest-readme-openapi.py
+  note: Assembled verbatim from the OpenAPI definition ReadMe embeds in each operation page of the provider's developer portal; paths and components merged by API title, nothing authored.
+  assembled_from:
+  - https://docs.joinforage.app/reference/authorize-a-payment.md
+  - https://docs.joinforage.app/reference/bulk-revoke-auth-tokens.md
+  - https://docs.joinforage.app/reference/cancel-a-payment.md
+  - https://docs.joinforage.app/reference/cancel-an-order-payment.md
+  - https://docs.joinforage.app/reference/cancel-order.md
+  - https://docs.joinforage.app/reference/capture-a-payment-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/capture-a-payment.md
+  - https://docs.joinforage.app/reference/create-a-payment.md
+  - https://docs.joinforage.app/reference/create-authentication-token.md
+  - https://docs.joinforage.app/reference/create-capture-session.md
+  - https://docs.joinforage.app/reference/create-custom-balance-check-session.md
+  - https://docs.joinforage.app/reference/create-payment-method.md
+  - https://docs.joinforage.app/reference/create-payment-refund.md
+  - https://docs.joinforage.app/reference/create-refunds-by-product.md
+  - https://docs.joinforage.app/reference/create-session-token.md
+  - https://docs.joinforage.app/reference/create-session.md
+  - https://docs.joinforage.app/reference/delete-payment-method.md
+  - https://docs.joinforage.app/reference/get-a-payment-refund.md
+  - https://docs.joinforage.app/reference/get-all-order-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payment-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payments.md
+  - https://docs.joinforage.app/reference/get-an-order-payment.md
+  - https://docs.joinforage.app/reference/get-an-order-refund.md
+  - https://docs.joinforage.app/reference/get-order-report.md
+  - https://docs.joinforage.app/reference/get-order.md
+  - https://docs.joinforage.app/reference/get-payment-details.md
+  - https://docs.joinforage.app/reference/get-payment-method.md
+  - https://docs.joinforage.app/reference/get-payout-report.md
+  - https://docs.joinforage.app/reference/get-payout-transaction-report.md
+  - https://docs.joinforage.app/reference/get-transaction-report.md
+  - https://docs.joinforage.app/reference/patch-update-an-order-payment.md
+  - https://docs.joinforage.app/reference/refund-entire-order.md
+  - https://docs.joinforage.app/reference/refund-partial-order.md
+  - https://docs.joinforage.app/reference/retrieve-all-payments-for-merchant-order-id.md
+  - https://docs.joinforage.app/reference/retrieve-state-card-details.md
+  - https://docs.joinforage.app/reference/revoke-authentication-token.md
+  - https://docs.joinforage.app/reference/submit-pin-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/update-a-payment.md
+  - https://docs.joinforage.app/reference/update-order.md
+  - https://docs.joinforage.app/reference/update-payment-method.md
+  - https://docs.joinforage.app/reference/view-balance-session.md
+  - https://docs.joinforage.app/reference/void-a-payment-custom-checkout.md
+  - https://docs.joinforage.app/reference/void-a-refund.md
+  merge:
+    pages: 43
+    deduped: 461
+    conflicts_kept_first: 0

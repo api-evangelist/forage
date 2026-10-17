@@ -1,0 +1,1259 @@
+openapi: 3.2.0
+info:
+  title: Forage Payments Custom Sessions API
+  description: The Forage Payments API is a REST API for processing Electronic Benefits Transfer (EBT) payments (SNAP and EBT Cash) in your e-commerce or in-store application.
+  contact:
+    name: API Support
+    email: engineering@joinforage.com
+  version: '2025-08-04'
+servers:
+- url: https://{environment}.joinforage.app
+  variables:
+    environment:
+      default: api.sandbox
+      enum:
+      - api
+      - api.sandbox
+security: []
+tags:
+- name: Custom Sessions
+paths:
+  /api/balance_sessions/:
+    parameters:
+    - $ref: '#/components/parameters/BearerTokenHeader'
+    - $ref: '#/components/parameters/MerchantAccountHeader'
+    - $ref: '#/components/parameters/IdempotencyKeyHeader'
+    post:
+      tags:
+      - Custom Sessions
+      summary: Create a Custom Balance Check Session
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request POST \\\n    --url https://api.sandbox.joinforage.app/api/balance_sessions/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'Idempotency-Key: <idempotency-key>' \\\n    --header 'accept: application/json' \\\n    --header 'content-type: application/json' \\\n    --data '\n{\n  \"payment_method\": \"b16673fe21\",\n  \"success_redirect_url\": \"https://www.your-app.com/?status=SUCCEEDED\",\n  \"cancel_redirect_url\": \"https://www.your-app.com/?status=CANCELED\"\n}\n'\n"
+      description: '> ⚠️ FNS Requirements
+
+        >
+
+        > FNS prohibits balance inquiries on sites and apps that offer guest checkout. Do not use this endpoint if your customers can opt for guest checkout.
+
+        >
+
+        > If guest checkout is not an option, then it''s up to you whether or not to add a balance inquiry feature. No FNS regulations apply.
+
+
+        A `POST` request to `/balance_sessions/` initiates a `Session` of the Custom Balance Check Forage UI.
+
+
+        Pass the Forage `PaymentMethod` `ref`, the hashed reference ID that represents the EBT Card, as the `payment_method` param in the request body.
+
+
+        The response payload represents the Custom Balance Check `Session`. The `redirect_url` value is the URL that launches the front-end, customer-facing Forage UI. Point a customer to this URL to enter their PIN to perform a secure balance inquiry.
+
+
+        If PIN entry is successful, then Forage points the customer to the `success_redirect_url` specified in the request body. Forage directs them to the `cancel_redirect_url` if they cancel the balance inquiry via the Forage UI.
+
+
+        > 📘 Retrieve Customer EBT Card Balance
+
+        >
+
+        > After a customer completes the Forage UI and is pointed to your `success_redirect_url`, send a `GET` to `/api/payment_methods/{payment_method_ref}/` and inspect the `balance` field of the response to retrieve their EBT Card balance.
+
+
+        See these guide for additional information:
+
+
+        - How Custom integrations work (Check the balance of an EBT account)
+
+        - Custom Quickstart
+
+        - Custom Balance Check `Session` payload'
+      operationId: CreateBalanceSession
+      security:
+      - OAuth2:
+        - pinpad_only
+      requestBody:
+        $ref: '#/components/requestBodies/BalanceSession'
+      responses:
+        '200':
+          $ref: '#/components/responses/BalanceSession200'
+        '400':
+          description: __Bad request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_parse_request_body:
+                  summary: Cannot Parse Request Body
+                  value:
+                    path: /api/balance_sessions/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: 'Parsing ''payment_method'' field failed with message: This field is required.'
+                      source:
+                        resource: Sessions
+                        ref: ''
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/balance_sessions/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Sessions
+                        ref: ''
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/balance_sessions/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/balance_sessions/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/balance_sessions/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+                unknown_fields_error:
+                  summary: Unknown Fields Error
+                  value:
+                    path: /api/balance_sessions/
+                    errors:
+                    - code: unknown_fields_error
+                      message: 'Unknown field(s) provided: {unknown_fields}'
+                      source:
+                        resource: Sessions
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                expired_session_token:
+                  summary: Expired Session Token
+                  value:
+                    path: /api/balance_sessions/
+                    errors:
+                    - code: expired_session_token
+                      message: This token has expired
+                      source:
+                        resource: Session_Token
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/balance_sessions/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_change_request:
+                  summary: Cannot Change Request
+                  value:
+                    path: /api/balance_sessions/
+                    errors:
+                    - code: cannot_change_request
+                      message: Two requests were submitted with the same idempotency key, but slightly different request bodies. Please use a new idempotency key if you intended to change the request body
+                      source:
+                        resource: Idempotency_Key
+        '423':
+          $ref: '#/components/responses/Error423'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/balance_sessions/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Sessions
+                        ref: ''
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/balance_sessions/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unknown exception from EBT network
+                      source:
+                        resource: Unknown
+      x-operation-id-source: normalized
+      x-operation-id-original: Create balance session
+  /api/balance_sessions/{session_ref}/:
+    parameters:
+    - name: session_ref
+      in: path
+      description: A unique identifier for the Custom Balance Check Session, returned as the `ref` value in the response payload of the `POST` request that created the `Session`.
+      required: true
+      schema:
+        type: string
+    - $ref: '#/components/parameters/BearerTokenHeader'
+    - $ref: '#/components/parameters/MerchantAccountHeader'
+    get:
+      tags:
+      - Custom Sessions
+      summary: Retrieve a Custom Balance Check Session
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request GET \\\n    --url https://api.sandbox.joinforage.app/api/balance_sessions/<balance_session_ref>/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json'\n"
+      description: '> ⚠️ Check EBT Card Balance
+
+        >
+
+        > This endpoint does not return a customer''s EBT Card balance. If you’re looking for a customer''s EBT Card balance, then send a `GET` to `/api/payment_methods/{payment_method_ref}`, and inspect the `balance` response field.
+
+
+        A `GET` request to `/balance_sessions/` retrieves the properties of a Custom Balance Check Session.
+
+
+        Use this endpoint to inspect a `Session`''s `success_redirect_url` and `cancel_redirect_url` values.
+
+
+        See these guides for additional information:
+
+
+        - Create a Custom Balance Check `Session`
+
+        - Custom Balance Check `Session` payload
+
+        - How Custom integrations work (Check the balance of an EBT account)
+
+        - Custom Quickstart'
+      operationId: ViewBalanceSession
+      security:
+      - OAuth2:
+        - internal
+        - pinpad_only
+      responses:
+        '200':
+          $ref: '#/components/responses/BalanceSession200'
+        '400':
+          description: __Bad request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/balance_sessions/{session_ref}/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Sessions
+                        ref: '{session_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/balance_sessions/{session_ref}/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/balance_sessions/{session_ref}/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/balance_sessions/{session_ref}/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+                unknown_fields_error:
+                  summary: Unknown Fields Error
+                  value:
+                    path: /api/balance_sessions/{session_ref}/
+                    errors:
+                    - code: unknown_fields_error
+                      message: 'Unknown field(s) provided: {unknown_fields}'
+                      source:
+                        resource: Sessions
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                expired_session_token:
+                  summary: Expired Session Token
+                  value:
+                    path: /api/balance_sessions/{session_ref}/
+                    errors:
+                    - code: expired_session_token
+                      message: This token has expired
+                      source:
+                        resource: Session_Token
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/balance_sessions/{session_ref}/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '404':
+          description: __Not Found__ - The requested resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              example:
+                path: /api/balance_sessions/{session_ref}/
+                errors:
+                - code: resource_not_found
+                  message: Balance session with ref {session_ref} does not exist for current Merchant with FNS {fns_number}
+                  source:
+                    resource: Sessions
+                    ref: '{session_ref}'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/balance_sessions/{session_ref}/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Sessions
+                        ref: ''
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/balance_sessions/{session_ref}/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unknown exception from EBT network
+                      source:
+                        resource: Unknown
+      x-operation-id-source: normalized
+      x-operation-id-original: View balance session
+  /api/capture_sessions/:
+    parameters:
+    - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+    - $ref: '#/components/parameters/MerchantAccountHeader'
+    - $ref: '#/components/parameters/IdempotencyKeyHeader'
+    - $ref: '#/components/parameters/APIVersionHeader'
+    post:
+      tags:
+      - Custom Sessions
+      summary: Create a Custom Payment Capture Session
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request POST \\\n    --url https://api.sandbox.joinforage.app/api/capture_sessions/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'Idempotency-Key: <idempotency-key>' \\\n    --header 'accept: application/json' \\\n    --header 'content-type: application/json' \\\n    --data '\n{\n  \"success_redirect_url\": \"https://www.your-app.com/?status=SUCCEEDED\",\n  \"cancel_redirect_url\": \"https://www.your-app.com/?status=CANCELED\",\n  \"delivery_address\": {\n    \"city\": \"San Francisco\",\n    \"country\": \"US\",\n    \"line1\": \"1856 Market St.\",\n    \"zipcode\": \"94106\",\n    \"state\": \"CA\"\n  },\n  \"is_delivery\": true,\n  \"payment_details\": {\n    \"snap_payment\": {\n      \"amount\": 20.12,\n      \"payment_method\": \"fsdf45345\",\n      \"description\": \"A SNAP payment\",\n      \"funding_type\": \"ebt_snap\",\n      \"metadata\": {}\n    }\n  },\n  \"customer_id\": \"cus_1234567890\",\n  \"external_order_id\": \"<external-order-id>\"\n}\n'\n"
+      description: 'A `POST` request to `/capture_sessions/` initiates a `Session` of the Forage Custom Payment Capture UI.
+
+
+        The response payload represents the Custom Payment Capture Session. The `ref` and `redirect_url` fields are the most important:
+
+
+        - `ref` represents the `Order`
+
+        - Store this `ref` so that you can pass it in a future request to Create an `Order` Payment, or to check the status of the `Order` via a `GET` to `/orders/{order_ref}/`
+
+        - `redirect_url` is the URL that launches the front-end, customer-facing Forage UI
+
+        - Point customers to this URL to enter their PIN to complete checkout
+
+
+        If PIN entry is successful, then Forage points the customer to the `success_redirect_url` specified in the request body. Forage directs the customer to the `cancel_redirect_url` if they cancel the balance inquiry from the Forage UI.
+
+
+        To check the status of an `Order` after the customer completes the Forage UI, send a `GET` to `/orders/{order_ref}/`.
+
+
+        > 📘 Use customer_id For Better Performance
+
+        >
+
+        > Pass `customer_id` in the request to Create a Capture Session.
+
+        >
+
+        > Forage automatically adds the `customer_id` to the Session''s corresponding `Order` and `OrderPayments`.
+
+        >
+
+        > `customer_id` helps Forage''s servers more quickly identify and associate the correct customer with the `Session`. While `customer_id` is not technically a required parameter, if you omit it then the request to create the Session could take longer to process. **It is strongly recommended to pass `customer_id`.**
+
+        >
+
+        > When the same `customer_id` is provided for a returning customer, Forage will retrieve and reuse their stored payment method, if available. Alternatively, passing the same `ebt_payment_method` can also pre-fill the stored payment method in the checkout session.
+
+        >
+
+        > Each customer should only have one unique `customer_id`. For example, if you create both a Capture Session and a `PaymentMethod` for the same customer, then the `customer_id` should be the same in both requests to ensure continuity of stored payment methods.'
+      operationId: CreateCaptureSession
+      security:
+      - OAuth2:
+        - pinpad_only
+      requestBody:
+        $ref: '#/components/requestBodies/CaptureSession'
+      responses:
+        '200':
+          $ref: '#/components/responses/CustomPaymentCapture200'
+        '400':
+          description: __Bad request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_parse_request_body:
+                  summary: Cannot Parse Request Body
+                  value:
+                    path: /api/capture_sessions/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: 'Parsing ''payment_details'' field failed with message: This field is required.'
+                      source:
+                        resource: Sessions
+                        ref: ''
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/capture_sessions/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Sessions
+                        ref: ''
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/capture_sessions/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/capture_sessions/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/capture_sessions/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+                unknown_fields_error:
+                  summary: Unknown Fields Error
+                  value:
+                    path: /api/capture_sessions/
+                    errors:
+                    - code: unknown_fields_error
+                      message: 'Unknown field(s) provided: {unknown_fields}'
+                      source:
+                        resource: Sessions
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/capture_sessions/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_change_request:
+                  summary: Cannot Change Request
+                  value:
+                    path: /api/capture_sessions/
+                    errors:
+                    - code: cannot_change_request
+                      message: Two requests were submitted with the same idempotency key, but slightly different request bodies. Please use a new idempotency key if you intended to change the request body
+                      source:
+                        resource: Idempotency_Key
+        '423':
+          $ref: '#/components/responses/Error423'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/capture_sessions/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Sessions
+                        ref: ''
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/capture_sessions/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unknown exception from EBT network
+                      source:
+                        resource: Unknown
+      x-operation-id-source: normalized
+      x-operation-id-original: Create capture session
+components:
+  schemas:
+    CustomCaptureSessionRequest:
+      allOf:
+      - $ref: '#/components/schemas/SessionRequest'
+      - type: object
+        required:
+        - payment_details
+        properties:
+          payment_details:
+            type: object
+            description: 'A list of `snap_payment` and/or `ebt_cash_payment` object(s) that Forage uses to create `OrderPayments`. In the response, Forage adds a unique `ref` identifier to every payment in the list.  Only use this field if you have a pre-existing `PaymentMethod` `ref` that should be used in this session.
+
+
+              **You must build with Forage Version `2024-03-05` to use `payment_details`.** Either pass `2024-03-05` as the API-Version header on a per request basis, or set the version for all requests in the Forage dashboard.
+
+              '
+            properties:
+              snap_payment:
+                allOf:
+                - $ref: '#/components/schemas/PaymentDetail'
+              ebt_cash_payment:
+                allOf:
+                - $ref: '#/components/schemas/PaymentDetail'
+        example:
+          delivery_address:
+            city: San Francisco
+            country: US
+            line1: 1856 Market St.
+            state: CA
+            zipcode: '94102'
+          is_delivery: false
+          payment_details:
+            snap_payment:
+              amount: 20.12
+              metadata: {}
+              payment_method: fsdf45345
+              description: A SNAP payment
+            ebt_cash_payment:
+              amount: 25.99
+              metadata: {}
+              payment_method: fsdf45345
+              description: An EBT Cash payment
+          customer_id: cus_1234567890
+          supported_benefits:
+          - snap
+          - non_ebt
+          success_redirect_url: https://www.your-app.com/?status=SUCCEEDED
+          cancel_redirect_url: https://www.your-app.com/?status=CANCELED
+    BalanceSessionRequest:
+      type: object
+      description: 'This object starts a Custom Balance Check Forage `Session`, used to check the balance of an already-stored Forage `PaymentMethod`.
+
+        '
+      properties:
+        payment_method:
+          type: string
+          description: 'The unique, hashed reference ID to the Forage [`PaymentMethod`](https://docs.joinforage.app/reference/payment-methods) instance that represents the EBT Card. The `type` of the `PaymentMethod` must be `ebt`, otherwise the API returns an error.
+
+
+            Send a `POST` to [`/payment_methods/`](https://docs.joinforage.app/reference/create-payment-method) to create a `PaymentMethod`.
+
+            '
+        success_redirect_url:
+          type: string
+          description: The URL that Forage redirects your customer to if the balance inquiry is successful.
+        cancel_redirect_url:
+          type: string
+          description: The URL that Forage redirects your customer to if the balance inquiry is canceled.
+      required:
+      - payment_method
+      - success_redirect_url
+      - cancel_redirect_url
+    CustomerIDField:
+      type: string
+      maxLength: 64
+      description: '**⚠️ If you’re integrating Forage with a POS Terminal, then do not use this param. It is only supported for online transactions.**
+
+
+        A unique identifier for the end customer making the payment.
+
+
+        Forage automatically adds the `customer_id` to the Session''s corresponding `Order` and `OrderPayments`.
+
+
+        This field helps Forage''s servers more quickly identify the customer associated with the request. While `customer_id` is not technically required, if you omit it then requests could take longer to process. **It is strongly recommended to pass customer_id.**
+
+
+        If you''re providing your internal customer ID, then we recommend that you hash the value before sending it on the payload.
+
+
+        Each customer should only have one unique `customer_id`. For example, if you create both a `PaymentMethod` and a Forage `Session` (Fully Hosted or Custom) or `Payment` (SDK) for the same customer, then the `customer_id` should be the same in both requests to ensure continuity of stored payment methods.
+
+        '
+    ExternalOrderIDField:
+      type: string
+      maxLength: 64
+      description: 'A unique identifier for the order as created by the merchant or platform (not Forage).
+
+
+        When a merchant or platform passes this order ID to Forage, it persists in each Forage transaction related to the `Order`. This field enables merchants to map order IDs in their system to corresponding Forage `Order` IDs.
+
+
+        **You must build with Forage Version `2023-05-15` or later to use `external_order_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.
+
+        '
+    DeliveryAddressData:
+      type: object
+      required:
+      - line1
+      - zipcode
+      description: '⚠️ **Exception**: If the purchase is made in-store via a POS Terminal, then a `delivery_address` is not required when creating a `Payment`.
+
+
+        The address for delivery or pickup of the `Order`. Per FNS regulations, this value must always be provided. If the `Order` is for pickup, then use the merchant address.
+
+        '
+      properties:
+        city:
+          type: string
+          description: The name of the city.
+        country:
+          type: string
+          description: Either `us` or `US`. Defaults to `US` if not provided.
+        line1:
+          type: string
+          description: The first line of the street address.
+        line2:
+          type:
+          - string
+          - 'null'
+          description: The second line of the street address.
+        zipcode:
+          type: string
+          description: The zip or postal code.
+        state:
+          type: string
+          description: The two-letter abbreviation, can be upper or lowercase, for the US state.
+    MetadataObject:
+      type: object
+      description: 'A required object containing merchant-defined key-value pairs to provide additional context for the payment.
+
+
+        Merchants should use this field to store **reference information** relevant to the transaction (for example, order details, system identifiers, or tracking data). This helps link the payment to records within their system.
+
+
+        Pass an empty object (`{}`) if no additional information is available.
+
+
+        > ⚠️ Personally Identifiable Information
+
+        >
+
+        > **Do not include personally identifiable information (PII)** such as names, emails, or payment details.
+
+        '
+    ExternalLocationIDField:
+      type: string
+      description: 'A unique identifier, provided by the merchant or platform (not Forage), that indicates the physical fulfillment location for the order. For example, this field could specify which location of a grocery store chain fulfilled an order.
+
+        '
+      example: 6e3b2ff7-51c8-4c64-befa-2eac90f7c3e9
+    PaymentDetail:
+      type: object
+      properties:
+        amount:
+          type: number
+          format: currency
+          description: 'A positive decimal number that represents how much to charge the `PaymentMethod` in USD. Precision is supported to the penny. To charge multiple balances, add both a `snap_payment` and `ebt_cash_payment` object to the `payment_details` list.
+
+
+            The minimum amount that can be charged is `0.01`.
+
+            '
+        metadata:
+          $ref: '#/components/schemas/MetadataObject'
+        payment_method:
+          type: string
+          description: The unique reference hash for the existing Forage [`PaymentMethod`](https://docs.joinforage.app/reference/payment-methods) that is to be charged in this transaction.
+        description:
+          type: string
+          description: A string that describes the payment.
+        funding_type:
+          type: string
+          description: 'A string that represents the type of tender. Use `ebt_cash` for `ebt_cash_payment` and `ebt_snap` for `snap_payment`.
+
+            '
+      required:
+      - amount
+      - metadata
+      - payment_method
+      - description
+    ErrorResponseObject:
+      type: object
+      description: An object that includes details about the error.
+      properties:
+        path:
+          type: string
+          description: The requested endpoint.
+        errors:
+          $ref: '#/components/schemas/ErrorsArray'
+    SessionRequest:
+      type: object
+      description: 'This object starts a Forage Session, an instance of the ready-to-use Forage Checkout UI. It either initiates a Custom Capture Session, if passed as is to the /capture_sessions/ endpoint, or a Fully Hosted Session, if passed to the /sessions/ endpoint. Refer to each endpoint''s documentation for details.
+
+        '
+      required:
+      - delivery_address
+      - success_redirect_url
+      - cancel_redirect_url
+      properties:
+        success_redirect_url:
+          type: string
+          description: The URL that Forage should redirect your customer to if the `Order` is completed successfully.
+        cancel_redirect_url:
+          type: string
+          description: The URL that Forage should redirect your customer to if the `Order` is cancelled.
+        delivery_address:
+          $ref: '#/components/schemas/DeliveryAddressData'
+        is_delivery:
+          type: boolean
+          description: Whether the order is for delivery or pickup. Optional — defaults to `false`. Forage reports this value to FNS for regulatory purposes.
+        is_commercial_shipping:
+          type:
+          - boolean
+          - 'null'
+          description: Whether the order is to be shipped commercially. FNS uses this value in its database for statistics.
+        supported_benefits:
+          type: array
+          items:
+            type: string
+          description: 'A list that limits the types of payment methods that can be applied at checkout, including any or all of the values in: `["snap", "ebt_cash", "non_ebt"]`. Use `supported_benefits` **only** if you want to restrict the possible payment method types. Omit this field in all other cases. For example, pass `["snap", "non_ebt"]` if you want to accept SNAP and credit card payments only (excluding EBT Cash).
+
+            '
+        platform_fee:
+          type: number
+          format: decimal
+          description: An optional field, for use by a platform supporting multiple merchants, that indicates the percentage cut of each payment that the platform charges as a fee.
+          example: 0.05
+        customer_id:
+          $ref: '#/components/schemas/CustomerIDField'
+        external_order_id:
+          $ref: '#/components/schemas/ExternalOrderIDField'
+        external_location_id:
+          $ref: '#/components/schemas/ExternalLocationIDField'
+    BalanceResponse:
+      type: object
+      description: An object that represents an EBT cardholder's account balance.
+      properties:
+        id:
+          type: integer
+          description: The unique identifier for the balance record.
+          example: 12345
+        snap:
+          type: string
+          format: currency
+          description: The available SNAP balance in USD on the customer’s EBT Card, represented as a numeric string.
+        non_snap:
+          type: string
+          format: currency
+          description: The available EBT Cash balance in USD on the customer's EBT Card, represented as a numeric string.
+        updated:
+          type: string
+          format: date-time
+          description: A UTC timestamp that indicates when the funds in the account last changed, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+        sequence_number:
+          type: string
+          description: A transaction number for this `PaymentMethod`'s most recent balance check. Returned only for POS Terminal transactions; omitted from online merchant balance checks.
+    ErrorsArray:
+      type: array
+      description: An array with information about the error.
+      items:
+        type: object
+        properties:
+          code:
+            type: string
+            description: A short string that represents the error.
+          message:
+            type: string
+            description: A developer-facing message with more details about the error, not to be displayed to customers.
+          source:
+            type: object
+            properties:
+              resource:
+                type: string
+                description: The type of the Forage resource involved in the error.
+              ref:
+                type: string
+                description: If applicable, the ten character reference hash of the Forage resource that caused the error. An empty string if no specific individual resource was involved.
+          details:
+            type: object
+            description: Additional details about the error, if applicable.
+      example: []
+    ReceiptData:
+      type: object
+      description: 'Most of the information that you''re required to display to the customer, according to FNS regulations.
+
+
+        This field is `null` if the data that populates the receipt is not yet available.
+
+
+        The total amount paid by the customer is `snap_amount` + `ebt_cash_amount` + `other_amount`. This amount will be settled with the merchant after applying Forage''s fees.
+
+        '
+      properties:
+        ref_number:
+          type: string
+          description: 'A unique reference hash for the Forage `Order`, `Payment`, or `Refund` associated with this receipt.
+
+
+            Note: `receipt.ref_number` equals `ref`.
+
+            '
+          default: 45e3f12a90
+        is_voided:
+          type: boolean
+          description: Whether the transaction associated with this receipt has been voided. If `false`, then the transaction finished processing as expected. If `true`, then the transaction was reversed.
+        snap_amount:
+          type: string
+          description: The USD amount charged/refunded to the SNAP balance of the EBT Card, represented as a numeric string.
+          default: '25.99'
+        ebt_cash_amount:
+          type: string
+          format: currency
+          description: The USD amount charged/refunded to the EBT Cash balance of the EBT Card, represented as a numeric string.
+          default: '10.99'
+        cash_back_amount:
+          type:
+          - string
+          - 'null'
+          format: currency
+          description: The USD amount of cash back given to the customer, represented as a numeric string.
+          default: '0.00'
+        other_amount:
+          type: string
+          format: currency
+          description: The USD amount charged/refunded to any payment method that is not an EBT Card, represented as a numeric string.
+          default: '5.99'
+        sales_tax_applied:
+          type: string
+          format: currency
+          description: The USD amount of taxes charged to the customer’s non-EBT payment instrument, represented as a numeric string.
+          default: '5.16'
+        balance:
+          allOf:
+          - $ref: '#/components/schemas/BalanceResponse'
+        last_4:
+          type: string
+          description: The last four digits of the EBT Card number.
+          default: '3456'
+        message:
+          type: string
+          description: A message from the EBT payment network that must be displayed to the EBT cardholder.
+          default: Approved
+        transaction_type:
+          type: string
+          enum:
+          - Order
+          - Refund
+          - Payment
+          description: 'A constant string that is used to identify the transaction type associated with the receipt.
+
+            '
+          default: Refund
+        created:
+          type: string
+          format: date-time
+          description: A UTC timestamp of when the Forage transaction object was created, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+          default: '2021-06-16T00:11:50.000000Z'
+        sequence_number:
+          type:
+          - string
+          - 'null'
+          description: The terminal transaction sequence number for POS transactions. `null` for online (non-POS) transactions.
+    SessionResponse:
+      description: The common properties across all Session endpoint response payloads.
+      type: object
+      properties:
+        ref:
+          type: string
+          description: A unique reference hash for the `Order` created for this `Session`.
+          example: 93410bcaff
+        status:
+          type: string
+          description: The status is always `draft` at the start.
+          enum:
+          - draft
+          - processing
+          - failed
+          - succeeded
+          - canceled
+          example: draft
+        success_date:
+          type: string
+          format: date-time
+          description: A UTC timestamp that indicates when all of the `Payments` associated with the `Order` are successfully charged, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+          example: '2021-06-16T00:11:50.000000Z'
+        receipt:
+          allOf:
+          - $ref: '#/components/schemas/ReceiptData'
+          - example: null
+        expires_at:
+          type: string
+          description: A UTC timestamp of when the `Order` associated with the Payment Capture Session will expire if it is not captured or canceled, set to 30 minutes from when the `Order` is created.
+          example: '2024-02-05T19:41:37.334897Z'
+        is_commercial_shipping:
+          type: boolean
+          description: Whether the order is to be shipped commercially. FNS uses this value in its database for statistics.
+        redirect_url:
+          type: string
+          format: url
+          description: The URL that launches the Forage Session UI. Point a customer to this URL when they are ready to complete checkout.
+          example: https://checkout.joinforage.app/payment?order=93410bcaff&merchant=1234567&payment_methods=62b4f98001&payment_methods=7401bea819
+        previous_errors:
+          $ref: '#/components/schemas/ErrorsArray'
+    CustomCaptureSessionRequestBody:
+      allOf:
+      - $ref: '#/components/schemas/CustomCaptureSessionRequest'
+      - type: object
+        properties:
+          capture_type:
+            type: string
+            enum:
+            - immediate
+            - deferred
+            default: immediate
+            description: An optional field that controls when the payment for the `Session` is captured. Defaults to `immediate` when the field is omitted. `deferred` requires an additional server-side request to actually capture the order.
+    BalanceSessionResponse:
+      allOf:
+      - $ref: '#/components/schemas/BalanceSessionRequest'
+      - type: object
+        properties:
+          ref:
+            type: string
+            description: A unique identifier for the Custom Balance Check `Session`. Pass this `ref` in a `GET` to [`/balance_sessions/{session_ref}/`](https://docs.joinforage.app/reference/get-custom-balance-check-session) to inspect the `Session` properties.
+          redirect_url:
+            type: string
+            format: url
+            description: The URL that launches the Forage Session UI. Point a customer to this URL when they are ready to enter their EBT Card PIN to perform a secure balance inquiry.
+            example: https://checkout.joinforage.app/balance?session=93410bcaff&merchant=1234567
+          previous_errors:
+            $ref: '#/components/schemas/ErrorsArray'
+      example:
+        ref: 93410bcaff
+        payment_method: b16673fe21
+        success_redirect_url: https://www.your-app.com/?status=SUCCEEDED
+        cancel_redirect_url: https://www.your-app.com/?status=CANCELED
+        redirect_url: https://checkout.joinforage.app/balance?session=93410bcaff&merchant=1234567
+        previous_errors: []
+  parameters:
+    AuthenticationBearerTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 [authentication token](https://docs.joinforage.app/docs/authentication#authentication-tokens) that validates the request. Send a `POST` to the [`/o/token/`](https://docs.joinforage.app/reference/create-authentication-token) endpoint to generate an authentication token. Pass the token in this header after the word `Bearer` and a whitespace, for example `Bearer <api_key>`.
+      schema:
+        type: string
+      required: true
+    BearerTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 bearer token that validates the request. You can use either a short-lived [session token](https://docs.joinforage.app/docs/authentication#session-tokens) if the request is coming from the front-end, or an [authentication token](https://docs.joinforage.app/docs/authentication#authentication-tokens) for server-side requests. Pass the token in this header after the word `Bearer` and a whitespace, for example `Bearer <api_key>`.
+      schema:
+        type: string
+      required: true
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      description: An alphanumeric key that clients can use to identify repeated requests that are dropped in transit. Generate a distinct key for every unique request and only re-use keys for retries.
+      schema:
+        type: string
+      required: true
+    APIVersionHeader:
+      name: API-Version
+      in: header
+      description: 'The [Forage version](https://docs.joinforage.app/reference/version-history), represented as a string with the format of a `YYYY-MM-DD` date.
+
+
+        If not specified in the request header, then the version defaults to the value set in the Forage dashboard.
+
+        '
+      schema:
+        type: string
+      required: false
+    MerchantAccountHeader:
+      name: Merchant-Account
+      in: header
+      description: A unique merchant ID that Forage provides during onboarding, as in `123ab45c67`. The Merchant ID can be found in the Forage [sandbox](https://dashboard.sandbox.joinforage.app/login/) or [production](https://dashboard.joinforage.app/login/) dashboard.
+      schema:
+        type: string
+      required: true
+  responses:
+    Error423:
+      description: __Locked__ - The request could not be completed because the target resource is currently locked.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseObject'
+          examples:
+            resource_locked:
+              summary: Resource Locked
+              value:
+                path: /api/example_path/
+                errors:
+                - code: resource_locked
+                  message: Request could not be completed because the resource is currently locked. Please try again later.
+                  source:
+                    resource: Idempotency_Key
+                    ref: ''
+    CustomPaymentCapture200:
+      description: __OK__ - Success
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/SessionResponse'
+            - $ref: '#/components/schemas/CustomCaptureSessionRequest'
+            example:
+              status: draft
+              delivery_address:
+                city: San Francisco
+                country: US
+                line1: 1856 Market St.
+                state: CA
+                zipcode: '94102'
+              is_delivery: false
+              payment_details:
+                snap_payment:
+                  ref: b29dj92e4g
+                  amount: 20.12
+                  metadata: {}
+                  payment_method: fsdf45345
+                  description: A SNAP payment
+                  funding_type: ebt_snap
+                ebt_cash_payment:
+                  ref: c4gdj92e4g
+                  amount: 25.99
+                  metadata: {}
+                  payment_method: fsdf45345
+                  description: An EBT Cash payment
+                  funding_type: ebt_cash
+              supported_benefits:
+              - snap
+              - non_ebt
+              ref: b873fe62dc
+              success_date: null
+              receipt: null
+              customer_id: null
+              is_commercial_shipping: null
+              success_redirect_url: https://www.your-app.com/?status=SUCCEEDED
+              cancel_redirect_url: https://www.your-app.com/?status=CANCELED
+              redirect_url: https://checkout.sandbox.joinforage.app/payment?order=b873fe62dc&merchant=9000055
+              previous_errors: []
+    BalanceSession200:
+      description: __OK__ - Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BalanceSessionResponse'
+  requestBodies:
+    CaptureSession:
+      description: Pass the following fields in the body of the request to `/capture_sessions/` to initiate a Custom Capture `Session`.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomCaptureSessionRequestBody'
+    BalanceSession:
+      description: Pass the following fields in the body of the request to `/balance_sessions/` to start a Custom Balance Check `Session`.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BalanceSessionRequest'
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your access token from the /o/token/ API, separated by whitespace.
+
+        '
+      flows:
+        password:
+          tokenUrl: /o/token/
+          scopes:
+            hosted_checkout: 'Scope for tokens used by merchant applications which allow Forage to manage split tender processing (i.e. EBT + Credit/Debit).
+
+              '
+            pinpad_only: 'Scope for tokens used by merchant applications which manage their own split tender (i.e. Forage Checkout is used only for EBT processing).
+
+              '
+        clientCredentials:
+          tokenUrl: /o/token/
+          scopes:
+            internal: 'Scope for tokens used by Forage internal applications.
+
+              '
+            pin-protected: 'Scope for tokens which can access secure storage.
+
+              '
+            disbursement: 'Scope for tokens which can disburse money to merchants.
+
+              '
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your JWT bearer token from the /api/session_token/ end-point, separated by whitespace.
+
+        '
+externalDocs:
+  description: Forage documentation
+  url: https://docs.joinforage.app/
+x-provenance:
+  method: searched
+  source: https://docs.joinforage.app/reference
+  harvested: '2026-10-14'
+  tool: harvest-readme-openapi.py
+  note: Assembled verbatim from the OpenAPI definition ReadMe embeds in each operation page of the provider's developer portal; paths and components merged by API title, nothing authored.
+  assembled_from:
+  - https://docs.joinforage.app/reference/authorize-a-payment.md
+  - https://docs.joinforage.app/reference/bulk-revoke-auth-tokens.md
+  - https://docs.joinforage.app/reference/cancel-a-payment.md
+  - https://docs.joinforage.app/reference/cancel-an-order-payment.md
+  - https://docs.joinforage.app/reference/cancel-order.md
+  - https://docs.joinforage.app/reference/capture-a-payment-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/capture-a-payment.md
+  - https://docs.joinforage.app/reference/create-a-payment.md
+  - https://docs.joinforage.app/reference/create-authentication-token.md
+  - https://docs.joinforage.app/reference/create-capture-session.md
+  - https://docs.joinforage.app/reference/create-custom-balance-check-session.md
+  - https://docs.joinforage.app/reference/create-payment-method.md
+  - https://docs.joinforage.app/reference/create-payment-refund.md
+  - https://docs.joinforage.app/reference/create-refunds-by-product.md
+  - https://docs.joinforage.app/reference/create-session-token.md
+  - https://docs.joinforage.app/reference/create-session.md
+  - https://docs.joinforage.app/reference/delete-payment-method.md
+  - https://docs.joinforage.app/reference/get-a-payment-refund.md
+  - https://docs.joinforage.app/reference/get-all-order-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payment-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payments.md
+  - https://docs.joinforage.app/reference/get-an-order-payment.md
+  - https://docs.joinforage.app/reference/get-an-order-refund.md
+  - https://docs.joinforage.app/reference/get-order-report.md
+  - https://docs.joinforage.app/reference/get-order.md
+  - https://docs.joinforage.app/reference/get-payment-details.md
+  - https://docs.joinforage.app/reference/get-payment-method.md
+  - https://docs.joinforage.app/reference/get-payout-report.md
+  - https://docs.joinforage.app/reference/get-payout-transaction-report.md
+  - https://docs.joinforage.app/reference/get-transaction-report.md
+  - https://docs.joinforage.app/reference/patch-update-an-order-payment.md
+  - https://docs.joinforage.app/reference/refund-entire-order.md
+  - https://docs.joinforage.app/reference/refund-partial-order.md
+  - https://docs.joinforage.app/reference/retrieve-all-payments-for-merchant-order-id.md
+  - https://docs.joinforage.app/reference/retrieve-state-card-details.md
+  - https://docs.joinforage.app/reference/revoke-authentication-token.md
+  - https://docs.joinforage.app/reference/submit-pin-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/update-a-payment.md
+  - https://docs.joinforage.app/reference/update-order.md
+  - https://docs.joinforage.app/reference/update-payment-method.md
+  - https://docs.joinforage.app/reference/view-balance-session.md
+  - https://docs.joinforage.app/reference/void-a-payment-custom-checkout.md
+  - https://docs.joinforage.app/reference/void-a-refund.md
+  merge:
+    pages: 43
+    deduped: 461
+    conflicts_kept_first: 0

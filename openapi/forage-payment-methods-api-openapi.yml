@@ -1,0 +1,1070 @@
+openapi: 3.2.0
+info:
+  title: Forage Payments Payment Methods API
+  description: The Forage Payments API is a REST API for processing Electronic Benefits Transfer (EBT) payments (SNAP and EBT Cash) in your e-commerce or in-store application.
+  contact:
+    name: API Support
+    email: engineering@joinforage.com
+  version: '2025-08-04'
+servers:
+- url: https://{environment}.joinforage.app
+  variables:
+    environment:
+      default: api.sandbox
+      enum:
+      - api
+      - api.sandbox
+security: []
+tags:
+- name: Payment Methods
+paths:
+  /api/payment_methods/:
+    post:
+      parameters:
+      - $ref: '#/components/parameters/BearerTokenHeader'
+      - $ref: '#/components/parameters/MerchantAccountHeaderPaymentMethod'
+      - $ref: '#/components/parameters/APIVersionHeader'
+      tags:
+      - Payment Methods
+      summary: Create a PaymentMethod
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request POST \\\n    --url https://api.sandbox.joinforage.app/api/payment_methods/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json' \\\n    --header 'content-type: application/json' \\\n    --data '\n{\n  \"type\": \"ebt\",\n  \"reusable\": true,\n  \"card\": {\n    \"number\": \"1234567890123456\"\n  },\n  \"customer_id\": \"cus_1234567890\"\n}\n'\n"
+      description: A `POST` request to `/payment_methods/` creates a new representation of a customer's payment instrument in Forage's database.
+      operationId: CreatePaymentMethod
+      security:
+      - OAuth2:
+        - internal
+        - pinpad_only
+      requestBody:
+        $ref: '#/components/requestBodies/PaymentMethod'
+      responses:
+        '200':
+          $ref: '#/components/responses/PaymentMethod200'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_parse_request_billing:
+                  summary: Cannot Parse Request - Billing Details for EBT Card
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: cannot_parse_request
+                      message: EBT Payment Method creation cannot have a 'billing_details' field in the request body
+                      source:
+                        resource: Payment_Methods
+                cannot_parse_request_card:
+                  summary: Cannot Parse Request - Missing Card
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: cannot_parse_request
+                      message: Payment Method creation requires a 'card' field in the request body
+                      source:
+                        resource: Payment_Methods
+                cannot_parse_request_number:
+                  summary: Cannot Parse Request - Missing Card Number
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: cannot_parse_request
+                      message: Payment Method creation requires a populated 'number' field in the 'card' field of the request body
+                      source:
+                        resource: Payment_Methods
+                cannot_parse_request_number_not_formatted:
+                  summary: Cannot Parse Request - Incorrect Card Number Format
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: cannot_parse_request
+                      message: Payment Method creation requires a correctly formatted 'number'
+                      source:
+                        resource: Payment_Methods
+                cannot_parse_request_track:
+                  summary: Cannot Parse Request - Missing Fields
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: cannot_parse_request
+                      message: Payment Method creation requires exactly one of either the 'number' field to be present on the 'card' field of the request body
+                      source:
+                        resource: Payment_Methods
+                cannot_parse_request_type:
+                  summary: Cannot Parse Request - Missing Type
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: cannot_parse_request
+                      message: Payment Method creation requires a 'type' field in the request body
+                      source:
+                        resource: Payment_Methods
+                invalid_customer_id:
+                  summary: Invalid Customer ID
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: invalid_customer_id
+                      message: 'No such customer: {psp+_customer_id}'
+                      source:
+                        resource: Payment_Methods
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Payment_Methods
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                unsupported_bin:
+                  summary: Unsupported BIN - Guam or Virgin Islands
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: unsupported_bin
+                      message: You attempted to add a card from Guam or the Virgin Islands, where online EBT processing is not yet supported.
+                      source:
+                        resource: Payment_Methods
+                unsupported_bin_generic:
+                  summary: Unsupported BIN - Payment Method Not Supported
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: benefit_bin_not_supported
+                      message: This payment method is unsupported by Forage (BIN not supported for this state).
+                      source:
+                        resource: Payment_Methods
+                unsupported_card_length:
+                  summary: Card Length Not Supported
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: unsupported_card_length
+                      message: A card length of {card_length} is unsupported by the state of {state}.  Allowed card lengths are {pan_lengths}.
+                      source:
+                        resource: Payment_Methods
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                expired_session_token:
+                  summary: Expired Session Token
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: expired_session_token
+                      message: This token has expired
+                      source:
+                        resource: Session_Token
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: OAuth_Access_Tokens
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/payment_methods/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Payment_Methods
+      x-operation-id-source: normalized
+      x-operation-id-original: Create payment method
+  /api/payment_methods/{payment_method_ref}/:
+    parameters:
+    - name: payment_method_ref
+      in: path
+      description: A unique reference hash for the Forage `PaymentMethod`, returned when the [`PaymentMethod` was created](https://docs.joinforage.app/reference/create-payment-method).
+      required: true
+      schema:
+        type: string
+    get:
+      parameters:
+      - $ref: '#/components/parameters/BearerTokenHeader'
+      - $ref: '#/components/parameters/MerchantAccountHeaderPaymentMethod'
+      - $ref: '#/components/parameters/APIVersionHeader'
+      tags:
+      - Payment Methods
+      summary: Retrieve a PaymentMethod
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request GET \\\n    --url https://api.sandbox.joinforage.app/api/payment_methods/ac47392bb1/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json'\n"
+      description: 'A `GET` request to `/payment_methods/{payment_method_ref}/` retrieves the specified `PaymentMethod` object.
+
+
+        You can use this endpoint to, for example:
+
+        - Retrieve the `balance` of an EBT Card after a customer completes a Custom Balance Check Session
+
+        - Retrieve information about a reusable payment method to display in a digital wallet'
+      operationId: GetPaymentMethod
+      security:
+      - OAuth2:
+        - pinpad_only
+        - hosted_checkout
+        - internal
+      responses:
+        '200':
+          $ref: '#/components/responses/PaymentMethod200'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Payment_Methods
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                expired_session_token:
+                  summary: Expired Session Token
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: expired_session_token
+                      message: This token has expired
+                      source:
+                        resource: Session_Token
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: OAuth_Access_Tokens
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                resource_not_found:
+                  summary: Resource Not Found
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: resource_not_found
+                      message: Payment method with id {payment_method_ref} does not exist for Tenant {tenant.name}
+                      source:
+                        resource: Payment_Methods
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Payment_Methods
+      x-operation-id-source: normalized
+      x-operation-id-original: Get payment method
+    patch:
+      parameters:
+      - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+      - $ref: '#/components/parameters/MerchantAccountHeaderPaymentMethod'
+      tags:
+      - Payment Methods
+      summary: Update a PaymentMethod
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request PATCH \\\n    --url https://api.sandbox.joinforage.app/api/payment_methods/ac47392bb1/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json' \\\n    --header 'content-type: application/json' \\\n    --data '\n{\n  \"customer_id\": \"cus_abcdefghij\"\n}\n'\n"
+      description: 'A `PATCH` request to `/payment_methods/{payment_method_ref}/` modifies information about an existing `PaymentMethod`. You can add a `customer_id` if it was not set when the `PaymentMethod` was created, or update whether the card is `reusable`.
+
+
+        Returns a `PaymentMethod` object if the operation is successful.'
+      operationId: UpdateAPaymentMethod
+      security:
+      - OAuth2:
+        - internal
+        - pinpad_only
+      requestBody:
+        $ref: '#/components/requestBodies/PaymentMethodUpdate'
+      responses:
+        '200':
+          $ref: '#/components/responses/PaymentMethod200'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_parse_request_card:
+                  summary: Cannot Parse Request - Cannot Update Card
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: cannot_parse_request
+                      message: Card fields update is not allowed. Please create a new PaymentMethod instead
+                      source:
+                        resource: Payment_Methods
+                cannot_parse_request_cus:
+                  summary: Cannot Parse Request - Cannot Update Customer ID
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: cannot_parse_request
+                      message: Updating customer_id is not allowed. Please create a new PaymentMethod instead.
+                      source:
+                        resource: Payment_Methods
+                cannot_parse_request_type:
+                  summary: Cannot Parse Request - Cannot Update Type
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: cannot_parse_request
+                      message: Updating type is not allowed. Please create a new PaymentMethod instead.
+                      source:
+                        resource: Payment_Methods
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Payment_Methods
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: OAuth_Access_Tokens
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                resource_not_found:
+                  summary: Resource Not Found
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: resource_not_found
+                      message: Payment method with id {payment_method_ref} does not exist for Tenant {tenant.name}
+                      source:
+                        resource: Payment_Methods
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Payment_Methods
+      x-operation-id-source: normalized
+      x-operation-id-original: Update a payment method
+    delete:
+      parameters:
+      - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+      - $ref: '#/components/parameters/MerchantAccountHeaderPaymentMethod'
+      tags:
+      - Payment Methods
+      summary: Delete a PaymentMethod
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request DELETE \\\n    --url https://api.sandbox.joinforage.app/api/payment_methods/ac47392bb1/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json'\n"
+      description: 'A `DELETE` request to `/payment_methods/{payment_method_ref}/` deletes a representation of a customer’s payment instrument in Forage’s database.
+
+
+        Returns an empty object if the operation was successful.
+
+
+        > 📘 Cannot Delete Succeeded `PaymentMethod`
+
+        >
+
+        > If a `PaymentMethod` has any associated payments in the `succeeded` state, then the `PaymentMethod` cannot be deleted.
+
+
+        > ⚠️ Deleting `PaymentMethod`
+
+        >
+
+        > Deleting a `PaymentMethod` cannot be undone. Use this endpoint with caution.'
+      operationId: DeletePaymentMethod
+      security:
+      - OAuth2:
+        - internal
+        - pinpad_only
+      responses:
+        '204':
+          description: The payment method was deleted successfully.
+          content:
+            application/json:
+              example: {}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Payment_Methods
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: OAuth_Access_Tokens
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                resource_not_found:
+                  summary: Resource Not Found
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: resource_not_found
+                      message: Payment method with id {payment_method_ref} does not exist for Tenant {tenant.name}
+                      source:
+                        resource: Payment_Methods
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/payment_methods/{payment_method_ref}/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Payment_Methods
+      x-operation-id-source: normalized
+      x-operation-id-original: Delete payment method
+components:
+  schemas:
+    OtherNonEBTCard:
+      allOf:
+      - $ref: '#/components/schemas/NonEBTCard'
+      - type: object
+        description: If a [credit/debit PSP](https://docs.joinforage.app/docs/ebt-online-101#creditdebit-payment-service-provider-psp) other than Stripe processes the payment, then this object details information about the non-EBT Card.
+        properties:
+          payment_profile_id:
+            type: string
+            description: A unique PSP-provided identifier for the payment.
+            example: pm_123456789012345
+          customer_profile_id:
+            type: string
+            description: A unique PSP-provided identifier for the customer.
+            example: cus_123456789012345
+        required:
+        - payment_profile_id
+        - customer_profile_id
+    CustomerIDField:
+      type: string
+      maxLength: 64
+      description: '**⚠️ If you’re integrating Forage with a POS Terminal, then do not use this param. It is only supported for online transactions.**
+
+
+        A unique identifier for the end customer making the payment.
+
+
+        Forage automatically adds the `customer_id` to the Session''s corresponding `Order` and `OrderPayments`.
+
+
+        This field helps Forage''s servers more quickly identify the customer associated with the request. While `customer_id` is not technically required, if you omit it then requests could take longer to process. **It is strongly recommended to pass customer_id.**
+
+
+        If you''re providing your internal customer ID, then we recommend that you hash the value before sending it on the payload.
+
+
+        Each customer should only have one unique `customer_id`. For example, if you create both a `PaymentMethod` and a Forage `Session` (Fully Hosted or Custom) or `Payment` (SDK) for the same customer, then the `customer_id` should be the same in both requests to ensure continuity of stored payment methods.
+
+        '
+    EBTCardResponse:
+      type: object
+      description: An object that details information about the EBT Card.
+      properties:
+        last_4:
+          type: string
+          description: The last four digits of the EBT Card number.
+        created:
+          type: string
+          format: date-time
+          description: A UTC timestamp that indicates when the EBT `PaymentMethod` was created, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+        token:
+          type: string
+          description: A token that Forage can use to look up the EBT Card in secure storage.
+        state:
+          type: string
+          description: The two-letter abbreviation for the US state that issued the EBT Card (e.g. `CA`).
+        fingerprint:
+          type: string
+          description: '⚠️ Deprecated. Please use `fingerprint_v2` instead. A unique hash based on the card PAN. The `fingerprint` is constant for a card PAN, no matter the `customer_id`. Use the `fingerprint` to track card usage for fraud prevention.
+
+            '
+        fingerprint_v2:
+          type: string
+          description: A unique hash based on the card PAN. The `fingerprint_v2` is constant for a card PAN, no matter the `customer_id`. Use the `fingerprint_v2` to track card usage for fraud prevention.
+    StripeCard:
+      allOf:
+      - $ref: '#/components/schemas/NonEBTCard'
+      - type: object
+        description: If Stripe is the credit/debit [PSP](https://docs.joinforage.app/docs/ebt-online-101#creditdebit-payment-service-provider-psp), then this object details information about the non-EBT Card.
+        properties:
+          payment_method_id:
+            type: string
+            description: The unique identifier for the Stripe PaymentMethod that represents the customer's payment instrument.
+            example: pm_123456789012345
+          psp_customer_id:
+            type: string
+            description: The unique Stripe identifier for the cardholder.
+            example: cus_123456789012345
+          is_hsa_fsa:
+            type: boolean
+            description: Indicates whether the card is an HSA/FSA card.
+          bin:
+            type: string
+            description: The BIN portion of the card number.
+            example: '400005'
+          issuer:
+            type: string
+            description: The name of the card issuer.
+            example: Lewis & Clark Bank
+          address_postal_code_check:
+            type: string
+            description: 'The result of any check done on the delivery address zip code. One of:
+
+              - `pass`: The provided information is correct and matches the data on file with the card issuer.
+
+              - `fail`: The provided information is incorrect and does not match the data on file.
+
+              - `unavailable`: The card issuer will not perform the check.
+
+              - `unchecked`: The information was provided but has not yet been checked by the card issuer.
+
+              '
+            enum:
+            - pass
+            - fail
+            - unavailable
+            - unchecked
+            example: pass
+          cvc_check:
+            type: string
+            description: 'The result of any check done on the CVC. One of:
+
+              - `pass`: The provided information is correct and matches the data on file with the card issuer.
+
+              - `fail`: The provided information is incorrect and does not match the data on file.
+
+              - `unavailable`: The card issuer will not perform the check.
+
+              - `unchecked`: The information was provided but has not yet been checked by the card issuer.
+
+              '
+            enum:
+            - pass
+            - fail
+            - unavailable
+            - unchecked
+            example: pass
+        required:
+        - payment_method_id
+        - psp_customer_id
+    PaymentMethodUpdateRequest:
+      type: object
+      description: The `PaymentMethod` details to update.
+      properties:
+        reusable:
+          type: boolean
+          description: Whether the `PaymentMethod` can be reused. If `false`, then the `PaymentMethod` can only be used for a single transaction.
+        customer_id:
+          type: string
+          maxLength: 64
+          description: 'A unique ID for the end customer associated with the payment method. `customer_id` can only be set once and can''t be changed, so this param only applies if the `PaymentMethod` doesn''t yet include a `customer_id`. If you try to update the `customer_id` field after it has already been set, then the API throws an error.
+
+
+            **You must build with Forage Version `2023-05-15` or later to use `customer_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.
+
+            '
+    TokenizedPaymentMethod:
+      description: 'This object represents a customer''s payment instrument. It has been tokenized by the server. It does not include all details about the payment method.
+
+
+        If the `PaymentMethod` has a type of `ebt`, then the `balance` field will be `null` until the `/api/payment_methods/{ref}/` endpoint is called. The `balance` field will always be `null` for non-EBT payment methods.
+
+        '
+      allOf:
+      - type: object
+        properties:
+          ref:
+            type: string
+            description: A unique reference identifier for the `PaymentMethod`. The `ref` is constant for a `customer_id` if the card is `reusable`.
+          type:
+            type: string
+            description: 'The card type. One of:
+
+
+              - `credit`
+
+              - `debit`
+
+              - `prepaid`
+
+              - `ebt`
+
+
+              ⚠️ The `type` value can only be `credit`, `debit`, or `prepaid` in a [Fully Hosted](https://docs.joinforage.app/docs/fully-hosted) or [HSA/FSA](https://docs.joinforage.app/docs/enable-hsa-fsa-payments) integration.
+
+              '
+          reusable:
+            type: boolean
+            description: Whether the `PaymentMethod` can be reused.  If `false`, then the `PaymentMethod` can only be used for a single transaction.
+          card:
+            oneOf:
+            - $ref: '#/components/schemas/EBTCardResponse'
+            - $ref: '#/components/schemas/NonEBTCard'
+            - $ref: '#/components/schemas/StripeCard'
+          balance:
+            $ref: '#/components/schemas/BalanceResponse'
+          customer_id:
+            $ref: '#/components/schemas/CustomerIDField'
+      example:
+        ref: ac47392bb1
+        type: ebt
+        reusable: true
+        card:
+          last_4: '3456'
+          created: 2021-06-16T00:11:50.000000Z-07:00
+          token: tok_sandbox_12345678901234567890
+          state: CA
+          fingerprint: 470dda97b63f016a962de150cf53ad72a93aaea4c2a59de2541e0994f48e02ef
+          fingerprint_v2: a2f1b4e6c7d9380b59fa7c2e98ad0e316be9fcde1e2a4c3d56b17c6e0198a2fb
+        balance: '100.00'
+        customer_id: cus_1234567890
+    PaymentMethod:
+      type: object
+      description: 'An object that represents a customer''s payment instrument.
+
+        '
+      properties:
+        type:
+          type: string
+          description: 'The card type. One of:
+
+
+            - `credit`
+
+            - `debit`
+
+            - `prepaid`
+
+            - `ebt`
+
+
+            ⚠️ The `type` value can only be `credit`, `debit`, or `prepaid` in a [Fully Hosted](https://docs.joinforage.app/docs/fully-hosted) or [HSA/FSA](https://docs.joinforage.app/docs/enable-hsa-fsa-payments) integration.
+
+            '
+          enum:
+          - credit
+          - debit
+          - prepaid
+          - ebt
+        reusable:
+          type: boolean
+          description: Whether the `PaymentMethod` can be reused.  If `false`, then the `PaymentMethod` can only be used for a single transaction.
+        customer_id:
+          $ref: '#/components/schemas/CustomerIDField'
+      required:
+      - type
+      - reusable
+    ErrorResponseObject:
+      type: object
+      description: An object that includes details about the error.
+      properties:
+        path:
+          type: string
+          description: The requested endpoint.
+        errors:
+          $ref: '#/components/schemas/ErrorsArray'
+    BalanceResponse:
+      type: object
+      description: An object that represents an EBT cardholder's account balance.
+      properties:
+        id:
+          type: integer
+          description: The unique identifier for the balance record.
+          example: 12345
+        snap:
+          type: string
+          format: currency
+          description: The available SNAP balance in USD on the customer’s EBT Card, represented as a numeric string.
+        non_snap:
+          type: string
+          format: currency
+          description: The available EBT Cash balance in USD on the customer's EBT Card, represented as a numeric string.
+        updated:
+          type: string
+          format: date-time
+          description: A UTC timestamp that indicates when the funds in the account last changed, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+        sequence_number:
+          type: string
+          description: A transaction number for this `PaymentMethod`'s most recent balance check. Returned only for POS Terminal transactions; omitted from online merchant balance checks.
+    EBTCard:
+      description: An object that details information about the EBT Card.
+      type: object
+      properties:
+        number:
+          type: string
+          description: 'The EBT Card number minus any separators.
+
+            '
+      required:
+      - number
+    NonEBTCard:
+      type: object
+      description: If a [credit/debit PSP](https://docs.joinforage.app/docs/ebt-online-101#creditdebit-payment-service-provider-psp) other than Stripe processes the payment, then this object details information about the non-EBT Card.
+      properties:
+        brand:
+          type: string
+          description: 'The card brand. One of:
+
+            - `amex`
+
+            - `discover`
+
+            - `mastercard`
+
+            - `visa`
+
+            '
+          enum:
+          - amex
+          - discover
+          - mastercard
+          - visa
+          example: visa
+        exp_month:
+          type: number
+          description: The expiration month as listed on the card, without any preceding `0` (e.g. `4` instead of `04`).
+          example: 3
+        exp_year:
+          type: number
+          description: The two-digit expiration year listed on the card (e.g. `21`).
+          example: 21
+        last_4:
+          type: string
+          description: The last four digits of the card number.
+          example: '6008'
+      required:
+      - brand
+      - cvc
+      - last_4
+      - exp_month
+      - exp_year
+    ErrorsArray:
+      type: array
+      description: An array with information about the error.
+      items:
+        type: object
+        properties:
+          code:
+            type: string
+            description: A short string that represents the error.
+          message:
+            type: string
+            description: A developer-facing message with more details about the error, not to be displayed to customers.
+          source:
+            type: object
+            properties:
+              resource:
+                type: string
+                description: The type of the Forage resource involved in the error.
+              ref:
+                type: string
+                description: If applicable, the ten character reference hash of the Forage resource that caused the error. An empty string if no specific individual resource was involved.
+          details:
+            type: object
+            description: Additional details about the error, if applicable.
+      example: []
+  parameters:
+    AuthenticationBearerTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 [authentication token](https://docs.joinforage.app/docs/authentication#authentication-tokens) that validates the request. Send a `POST` to the [`/o/token/`](https://docs.joinforage.app/reference/create-authentication-token) endpoint to generate an authentication token. Pass the token in this header after the word `Bearer` and a whitespace, for example `Bearer <api_key>`.
+      schema:
+        type: string
+      required: true
+    BearerTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 bearer token that validates the request. You can use either a short-lived [session token](https://docs.joinforage.app/docs/authentication#session-tokens) if the request is coming from the front-end, or an [authentication token](https://docs.joinforage.app/docs/authentication#authentication-tokens) for server-side requests. Pass the token in this header after the word `Bearer` and a whitespace, for example `Bearer <api_key>`.
+      schema:
+        type: string
+      required: true
+    APIVersionHeader:
+      name: API-Version
+      in: header
+      description: 'The [Forage version](https://docs.joinforage.app/reference/version-history), represented as a string with the format of a `YYYY-MM-DD` date.
+
+
+        If not specified in the request header, then the version defaults to the value set in the Forage dashboard.
+
+        '
+      schema:
+        type: string
+      required: false
+    MerchantAccountHeaderPaymentMethod:
+      name: Merchant-Account
+      in: header
+      description: 'A unique merchant ID that Forage provides during onboarding, as in `123ab45c67`. The Merchant ID can be found in the Forage [sandbox](https://dashboard.sandbox.joinforage.app/login/) or [production](https://dashboard.joinforage.app/login/) dashboard.
+
+
+        Pass a `Merchant-Account` header to create a `PaymentMethod` associated with a specific merchant account for routing and reporting purposes. **This header does not restrict `PaymentMethod`s to a single merchant account. `PaymentMethod`s are tenant-scoped and can be used across all merchant accounts within the same tenant.**
+
+        '
+      schema:
+        type: string
+      required: true
+  requestBodies:
+    PaymentMethodUpdate:
+      description: The information to update about a `PaymentMethod`.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PaymentMethodUpdateRequest'
+    PaymentMethod:
+      description: A PaymentMethod to add to or update on the system.
+      content:
+        application/json:
+          schema:
+            allOf:
+            - $ref: '#/components/schemas/PaymentMethod'
+            - type: object
+              properties:
+                card:
+                  oneOf:
+                  - $ref: '#/components/schemas/EBTCard'
+                  - $ref: '#/components/schemas/StripeCard'
+                  - $ref: '#/components/schemas/OtherNonEBTCard'
+  responses:
+    PaymentMethod200:
+      description: __OK__ - Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenizedPaymentMethod'
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your access token from the /o/token/ API, separated by whitespace.
+
+        '
+      flows:
+        password:
+          tokenUrl: /o/token/
+          scopes:
+            hosted_checkout: 'Scope for tokens used by merchant applications which allow Forage to manage split tender processing (i.e. EBT + Credit/Debit).
+
+              '
+            pinpad_only: 'Scope for tokens used by merchant applications which manage their own split tender (i.e. Forage Checkout is used only for EBT processing).
+
+              '
+        clientCredentials:
+          tokenUrl: /o/token/
+          scopes:
+            internal: 'Scope for tokens used by Forage internal applications.
+
+              '
+            pin-protected: 'Scope for tokens which can access secure storage.
+
+              '
+            disbursement: 'Scope for tokens which can disburse money to merchants.
+
+              '
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your JWT bearer token from the /api/session_token/ end-point, separated by whitespace.
+
+        '
+externalDocs:
+  description: Forage documentation
+  url: https://docs.joinforage.app/
+x-provenance:
+  method: searched
+  source: https://docs.joinforage.app/reference
+  harvested: '2026-10-14'
+  tool: harvest-readme-openapi.py
+  note: Assembled verbatim from the OpenAPI definition ReadMe embeds in each operation page of the provider's developer portal; paths and components merged by API title, nothing authored.
+  assembled_from:
+  - https://docs.joinforage.app/reference/authorize-a-payment.md
+  - https://docs.joinforage.app/reference/bulk-revoke-auth-tokens.md
+  - https://docs.joinforage.app/reference/cancel-a-payment.md
+  - https://docs.joinforage.app/reference/cancel-an-order-payment.md
+  - https://docs.joinforage.app/reference/cancel-order.md
+  - https://docs.joinforage.app/reference/capture-a-payment-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/capture-a-payment.md
+  - https://docs.joinforage.app/reference/create-a-payment.md
+  - https://docs.joinforage.app/reference/create-authentication-token.md
+  - https://docs.joinforage.app/reference/create-capture-session.md
+  - https://docs.joinforage.app/reference/create-custom-balance-check-session.md
+  - https://docs.joinforage.app/reference/create-payment-method.md
+  - https://docs.joinforage.app/reference/create-payment-refund.md
+  - https://docs.joinforage.app/reference/create-refunds-by-product.md
+  - https://docs.joinforage.app/reference/create-session-token.md
+  - https://docs.joinforage.app/reference/create-session.md
+  - https://docs.joinforage.app/reference/delete-payment-method.md
+  - https://docs.joinforage.app/reference/get-a-payment-refund.md
+  - https://docs.joinforage.app/reference/get-all-order-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payment-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payments.md
+  - https://docs.joinforage.app/reference/get-an-order-payment.md
+  - https://docs.joinforage.app/reference/get-an-order-refund.md
+  - https://docs.joinforage.app/reference/get-order-report.md
+  - https://docs.joinforage.app/reference/get-order.md
+  - https://docs.joinforage.app/reference/get-payment-details.md
+  - https://docs.joinforage.app/reference/get-payment-method.md
+  - https://docs.joinforage.app/reference/get-payout-report.md
+  - https://docs.joinforage.app/reference/get-payout-transaction-report.md
+  - https://docs.joinforage.app/reference/get-transaction-report.md
+  - https://docs.joinforage.app/reference/patch-update-an-order-payment.md
+  - https://docs.joinforage.app/reference/refund-entire-order.md
+  - https://docs.joinforage.app/reference/refund-partial-order.md
+  - https://docs.joinforage.app/reference/retrieve-all-payments-for-merchant-order-id.md
+  - https://docs.joinforage.app/reference/retrieve-state-card-details.md
+  - https://docs.joinforage.app/reference/revoke-authentication-token.md
+  - https://docs.joinforage.app/reference/submit-pin-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/update-a-payment.md
+  - https://docs.joinforage.app/reference/update-order.md
+  - https://docs.joinforage.app/reference/update-payment-method.md
+  - https://docs.joinforage.app/reference/view-balance-session.md
+  - https://docs.joinforage.app/reference/void-a-payment-custom-checkout.md
+  - https://docs.joinforage.app/reference/void-a-refund.md
+  merge:
+    pages: 43
+    deduped: 461
+    conflicts_kept_first: 0

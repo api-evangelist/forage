@@ -1,0 +1,1952 @@
+openapi: 3.2.0
+info:
+  title: Forage Payments Order Refunds API
+  description: The Forage Payments API is a REST API for processing Electronic Benefits Transfer (EBT) payments (SNAP and EBT Cash) in your e-commerce or in-store application.
+  contact:
+    name: API Support
+    email: engineering@joinforage.com
+  version: '2025-08-04'
+servers:
+- url: https://{environment}.joinforage.app
+  variables:
+    environment:
+      default: api.sandbox
+      enum:
+      - api
+      - api.sandbox
+security: []
+tags:
+- name: Order Refunds
+paths:
+  /api/orders/{order_ref}/refund_all/:
+    parameters:
+    - name: order_ref
+      in: path
+      description: A unique reference hash for the Forage `Order` object, returned when the order’s parent [`Session`](https://docs.joinforage.app/reference/forage-sessions) was created.
+      required: true
+      schema:
+        type: string
+    - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+    - $ref: '#/components/parameters/MerchantAccountHeader'
+    - $ref: '#/components/parameters/IdempotencyKeyHeader'
+    - $ref: '#/components/parameters/APIVersionHeader'
+    post:
+      tags:
+      - Order Refunds
+      summary: Create a refund for an entire Order
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request POST \\\n    --url https://api.sandbox.joinforage.app/api/orders/<order_ref>/refund_all/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'Idempotency-Key: <idempotency-key>' \\\n    --header 'accept: application/json' \\\n    --header 'content-type: application/json' \\\n    --data '\n{\n  \"reason\": \"Order could not be delivered.\",\n  \"metadata\": {},\n  \"external_order_id\": \"<external-order-id>\"\n}\n'\n"
+      description: '> ⚠️ Refunding Entire Orders Must Be Server-Side
+
+        >
+
+        > To keep your app secure, requests to refund an entire Order should only be generated on the server-side.
+
+
+        A `POST` request to `/orders/{order_ref}/refund_all/` refunds an entire `Order`. It tells Forage’s servers to create an `OrderRefund` for every associated `OrderPayment`, and to refund all charges to their original payment methods, net any already processed refunds. This request has immediate financial side effects.
+
+
+        On success, the API responds with the original `Order`. The `refunds` field details a list of reference hashes, `refund_refs`, for all of the `OrderRefunds` that Forage created as part of the refund process.
+
+
+        If there are any `OrderRefunds` still processing when you send the `POST`, then the API returns a `400` until those refunds have resolved.
+
+
+        To retrieve information about a particular `OrderRefund` in the list, send a `GET` to `/orders/{order_ref}/refunds/{refund_ref}/`.
+
+
+        > ⚠️ Retrieving Refund Receipt Info
+
+        >
+
+        > This endpoint does not return `receipt` information.
+
+        >
+
+        > To retrieve transaction information to display to a customer, send periodic `GET` requests to `/orders/{order_ref}/refunds/{refund_ref}/` for every`OrderRefund` returned in the `refunds` field until the status of each is `succeeded`. Then, confirm that the `receipt.balance.updated` timestamp is no longer changing and retrieve the latest balance.
+
+
+        > 📘 Webhooks For Refund Status Updates
+
+        >
+
+        > Forage sends a `REFUND_STATUS_UPDATED` webhook when the status of a refund changes. Check out the guide to Forage webhooks for instructions on how to listen for the event.'
+      operationId: RefundOrder
+      security:
+      - OAuth2:
+        - internal
+        - hosted_checkout
+        - pinpad_only
+      requestBody:
+        $ref: '#/components/requestBodies/BulkRefund'
+      responses:
+        '200':
+          $ref: '#/components/responses/Order200'
+        '400':
+          description: __Bad request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_parse_request_body:
+                  summary: Cannot Parse Request Body
+                  value:
+                    path: /api/orders/{order_ref}/refund_all/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: 'Parsing ''reason'' field failed with message: This field is required'
+                      source:
+                        resource: Refunds
+                        ref: ''
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/orders/{order_ref}/refund_all/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/refund_all/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/orders/{order_ref}/refund_all/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/refund_all/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+                order_already_refunded:
+                  summary: Order Already Refunded
+                  value:
+                    path: /api/orders/{order_ref}/refund_all/
+                    errors:
+                    - code: order_already_refunded
+                      message: Payments associated with order ref {order_ref} have already been fully refunded.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+                order_not_succeeded:
+                  summary: Order Not Succeeded
+                  value:
+                    path: /api/orders/{order_ref}/refund_all/
+                    errors:
+                    - code: order_not_succeeded
+                      message: Order with ref {order_ref} has not completed successfully and therefore cannot be refunded. Current order status is {order_status}
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+                unknown_fields_error:
+                  summary: Unknown Fields Error
+                  value:
+                    path: /api/orders/{order_ref}/refund_all/
+                    errors:
+                    - code: unknown_fields_error
+                      message: 'Unknown field(s) provided: {unknown_fields}'
+                      source:
+                        resource: Orders
+                wait_for_batch_refund:
+                  summary: Wait for Batch Refund
+                  value:
+                    path: /api/orders/{order_ref}/refund_all/
+                    errors:
+                    - code: wait_for_batch_refund
+                      message: Order with ref {order_ref} has other active refunds and therefore cannot be batch refunded. Existing refunds in processing state are {refund_ref}
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/orders/{order_ref}/refund_all/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '403':
+          description: __Forbidden__
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: A string that describes the nature of the error.
+              example:
+                detail: You do not have permission to perform this action.
+        '404':
+          description: __Not Found__ - The requested resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              example:
+                path: /api/orders/{order_ref}/refund_all/
+                errors:
+                - code: resource_not_found
+                  message: Order with ref {order_ref} does not exist for current Merchant with FNS {fns_number}
+                  source:
+                    resource: Orders
+                    ref: '{order_ref}'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_change_request:
+                  summary: Cannot Change Request
+                  value:
+                    path: /api/orders/{order_ref}/refund_all/
+                    errors:
+                    - code: cannot_change_request
+                      message: Two requests were submitted with the same idempotency key, but slightly different request bodies. Please use a new idempotency key if you intended to change the request body
+                      source:
+                        resource: Idempotency_Key
+        '423':
+          $ref: '#/components/responses/Error423'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/orders/{order_ref}/refund_all/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/orders/{order_ref}/refund_all/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unknown exception from EBT network
+                      source:
+                        resource: Unknown
+      x-operation-id-source: normalized
+      x-operation-id-original: Refund order
+  /api/orders/{order_ref}/refund_by_product/:
+    parameters:
+    - name: order_ref
+      in: path
+      description: A unique reference hash for the Forage `Order` object, returned when the order's parent [`Session`](https://docs.joinforage.app/reference/forage-sessions) was created.
+      required: true
+      schema:
+        type: string
+    - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+    - $ref: '#/components/parameters/MerchantAccountHeader'
+    - $ref: '#/components/parameters/IdempotencyKeyHeader'
+    - $ref: '#/components/parameters/APIVersionHeader'
+    post:
+      tags:
+      - Order Refunds
+      summary: Create refunds for specific products in an Order
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request POST \\\n    --url https://api.sandbox.joinforage.app/api/orders/<order_ref>/refund_by_product/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'Idempotency-Key: <idempotency-key>' \\\n    --header 'accept: application/json' \\\n    --header 'content-type: application/json' \\\n    --data '\n{\n  \"products\": [\n    {\n      \"id\": 1235,\n      \"quantity\": \"2.00\"\n    }\n  ],\n  \"reason\": \"Product is damaged\",\n  \"metadata\": {}\n}\n'\n"
+      description: '> ⚠️ Product Refunds Must Be Server-Side
+
+        >
+
+        > To keep your app secure, requests to refund specific products should only be generated on the server-side.
+
+
+        A `POST` request to `/orders/{order_ref}/refund_by_product/` creates refunds for specific products in an `Order`. It tells Forage''s servers to create `OrderRefund` objects for the specified products and refund the appropriate amounts to their original payment methods. This request has immediate financial side effects.
+
+
+        On success, the API responds with an array of refund objects that represent the transactions and a `201` HTTP status code.
+
+
+        ### HTTP STATUS 201
+
+
+        This endpoint always returns a `201`, even if some refund attempts fail, because Forage always creates refund objects to preserve a record of the attempted transactions. To make sure that the refunds were successful, check that the `status` of each refund is `succeeded`. Send periodic `GET` requests to `/orders/{order_ref}/refunds/{refund_ref}/` to retrieve the updated objects. If the status is `failed`, then inspect the `last_processing_error` field of the response object for information about the error.
+
+
+        > 📘 Webhooks For Refund Status Updates
+
+        >
+
+        > Forage sends a `REFUND_STATUS_UPDATED` webhook when the status of a refund changes. Check out the guide to Forage webhooks for instructions on how to listen for the event.'
+      operationId: CreateRefundsByProduct
+      security:
+      - OAuth2:
+        - internal
+        - hosted_checkout
+        - pinpad_only
+      requestBody:
+        $ref: '#/components/requestBodies/OrderRefundByProduct'
+      responses:
+        '201':
+          $ref: '#/components/responses/OrderRefundByProduct201'
+        '400':
+          description: __Bad Request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_parse_request_body:
+                  summary: Cannot Parse Request Body
+                  value:
+                    path: /api/orders/{order_ref}/refund_by_product/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: 'Parsing ''reason'' field failed with message: This field is required'
+                      source:
+                        resource: Refunds
+                        ref: ''
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/orders/{order_ref}/refund_by_product/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Refunds
+                        ref: ''
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/refund_by_product/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/orders/{order_ref}/refund_by_product/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/refund_by_product/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+                unknown_fields_error:
+                  summary: Unknown Fields Error
+                  value:
+                    path: /api/orders/{order_ref}/refund_by_product/
+                    errors:
+                    - code: unknown_fields_error
+                      message: 'Unknown field(s) provided: {unknown_fields}'
+                      source:
+                        resource: Refunds
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/orders/{order_ref}/refund_by_product/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '404':
+          description: __Not Found__ - The requested resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              example:
+                path: /api/orders/{order_ref}/refund_by_product/
+                errors:
+                - code: resource_not_found
+                  message: Order with ref {order_ref} does not exist for current Merchant with FNS {fns_number}
+                  source:
+                    resource: Orders
+                    ref: '{order_ref}'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/orders/{order_ref}/refund_by_product/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Refunds
+                        ref: ''
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/orders/{order_ref}/refund_by_product/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unknown exception from EBT network
+                      source:
+                        resource: Unknown
+      x-operation-id-source: normalized
+      x-operation-id-original: Create refunds by product
+  /api/orders/{order_ref}/refunds/:
+    parameters:
+    - name: order_ref
+      in: path
+      description: A unique reference hash for the Forage `Order` object, returned when the order’s parent [`Session`](https://docs.joinforage.app/reference/forage-sessions) was created.
+      required: true
+      schema:
+        type: string
+    post:
+      parameters:
+      - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+      - $ref: '#/components/parameters/MerchantAccountHeader'
+      - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      - $ref: '#/components/parameters/APIVersionHeader'
+      tags:
+      - Order Refunds
+      summary: Create a refund for part of an Order
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request POST \\\n    --url https://api.sandbox.joinforage.app/api/orders/<order_ref>/refunds/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'Idempotency-Key: <idempotency-key>' \\\n    --header 'accept: application/json' \\\n    --header 'content-type: application/json' \\\n    --data '\n{\n  \"payment\": \"f587edf124\",\n  \"amount\": \"25.99\",\n  \"reason\": \"Order could not be delivered.\",\n  \"metadata\": {},\n  \"merchant_fixed_settlement\": \"5.11\",\n  \"platform_fixed_settlement\": \"5.11\",\n  \"external_order_id\": \"<external-order-id>\"\n}\n'\n"
+      description: '> ⚠️ Partial Refunds Must Be Server-Side
+
+        >
+
+        > To keep your app secure, requests to refund part of an Order should only be generated on the server-side.
+
+
+        > ⚠️ API Version Requirements
+
+        >
+
+        > You must use Forage version `2024-01-08` or higher for this endpoint to return populated `receipt` data. Earlier versions return the receipt value as null, so to retrieve the data you need to send `GET` requests to `/orders/{order_ref}/refunds/{refund_ref}/` until the status of the refund is `succeeded`.
+
+
+        A `POST` request to `/orders/{order_ref}/refunds/` refunds part of an `Order`. It tells Forage’s servers to refund a specific `amount` of a single `OrderPayment` associated with the `Order`. This request has immediate financial side effects.
+
+
+        On success, the API responds with an `OrderRefund` that represents the transaction and a `201` HTTP status code.
+
+
+        ### HTTP STATUS 201
+
+
+        This endpoint always returns a `201`, even if the refund attempt fails, because Forage always creates an `OrderRefund` to preserve a record of the attempted transaction. To make sure that the refund was successful, check that the `status` is `succeeded`. Send periodic `GET` requests to `/orders/{order_ref}/refunds/{refund_ref}/` to retrieve the updated object. If the status is `failed`, then inspect the `last_processing_error` field of the response object for information about the error.'
+      operationId: CreateARefund
+      security:
+      - OAuth2:
+        - internal
+        - hosted_checkout
+        - pinpad_only
+      requestBody:
+        $ref: '#/components/requestBodies/OrderRefund'
+      responses:
+        '201':
+          description: __Created__ - Success
+          content:
+            application/json:
+              schema:
+                allOf:
+                - $ref: '#/components/schemas/OrderRefundResponse'
+                - type: object
+                  properties:
+                    refund_errors:
+                      type: array
+                      items:
+                        $ref: '#/components/schemas/ErrorResponseObject'
+                      description: 'An array of objects that details information about any refund errors.
+
+
+                        _Note that this field is only returned when an `OrderRefund` is created. The [retrieve an `OrderRefund`](https://docs.joinforage.app/reference/get-an-order-refund) request omits this field in its response_.
+
+                        '
+                example:
+                  payment: f587edf124
+                  amount: '25.99'
+                  reason: Order could not be delivered
+                  metadata: {}
+                  merchant_fixed_settlement: '5.11'
+                  platform_fixed_settlement: '5.11'
+                  external_order_id: 1f2ee410-5b47-4130-aec2-40f5eb2108f5
+                  ref: 45e3f12a90
+                  order: 83b1c754ae
+                  merchant: '9000055'
+                  funding_type: ebt_snap
+                  status: processing
+                  last_processing_error: null
+                  created: '2021-06-16T00:11:50.000000Z'
+                  updated: '2021-06-16T00:11:50.000000Z'
+                  receipt:
+                    ref_number: 45e3f12a90
+                    is_voided: true
+                    snap_amount: '25.99'
+                    ebt_cash_amount: '10.99'
+                    other_amount: '5.99'
+                    sales_tax_applied: '5.16'
+                    balance:
+                      snap: '72.94'
+                      non_snap: '32.16'
+                      updated: '2021-06-16T00:11:50.000000Z'
+                    last_4: '3456'
+                    message: Approved
+                    transaction_type: Refund
+                    created: '2021-06-16T00:11:50.000000Z'
+                  tpp_lookup_id: re_3JemUSGfBYJeLEva0af6My64
+                  refund_errors: []
+        '400':
+          description: __Bad Request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_parse_request_body:
+                  summary: Cannot Parse Request Body
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: 'Parsing ''reason'' field failed with message: This field is required'
+                      source:
+                        resource: Refunds
+                        ref: ''
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+                order_already_refunded:
+                  summary: Order Already Refunded
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: order_already_refunded
+                      message: Payments associated with order ref {order_ref} have already been fully refunded.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+                order_not_succeeded:
+                  summary: Order Not Succeeded
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: order_not_succeeded
+                      message: Order with ref {order_ref} has not completed successfully and therefore cannot be refunded. Current order status is {order_status}
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+                refund_exceeds_order_total:
+                  summary: Refund Exceeds Order Total
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: refund_exceeds_order_total
+                      message: Requested refund would push the total amount refunded above the original Payment amount. Total amount paid is {amount_paid}. Existing total of refunds is {refund_total}
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+                unknown_fields_error:
+                  summary: Unknown Fields Error
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: unknown_fields_error
+                      message: 'Unknown field(s) provided: {unknown_fields}'
+                      source:
+                        resource: Orders
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '404':
+          description: __Not Found__ - The requested resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              example:
+                path: /api/orders/{order_ref}/refunds/
+                errors:
+                - code: resource_not_found
+                  message: Order with ref {order_ref} does not exist for current Merchant with FNS {fns_number}
+                  source:
+                    resource: Orders
+                    ref: '{order_ref}'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_change_request:
+                  summary: Cannot Change Request
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: cannot_change_request
+                      message: Two requests were submitted with the same idempotency key, but slightly different request bodies. Please use a new idempotency key if you intended to change the request body
+                      source:
+                        resource: Idempotency_Key
+        '423':
+          $ref: '#/components/responses/Error423'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unknown exception from EBT network
+                      source:
+                        resource: Unknown
+      x-operation-id-source: normalized
+      x-operation-id-original: Create a refund
+    get:
+      parameters:
+      - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+      - $ref: '#/components/parameters/MerchantAccountHeader'
+      - $ref: '#/components/parameters/APIVersionHeader'
+      tags:
+      - Order Refunds
+      summary: Retrieve all OrderRefunds for an Order
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request GET \\\n    --url https://api.sandbox.joinforage.app/api/orders/<order_ref>/refunds/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json'\n"
+      description: 'A `GET` request to `/orders/{order_ref}/refunds/` retrieves all `OrderRefunds` associated with the provided `order_ref`.
+
+
+        On success, the API responds with an array of `OrderRefunds`.'
+      operationId: GetAllOrderRefunds
+      security:
+      - OAuth2:
+        - internal
+        - hosted_checkout
+        - pinpad_only
+      responses:
+        '200':
+          description: __OK__ - Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderRefundResponse'
+        '400':
+          description: __Bad request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+                unknown_fields_error:
+                  summary: Unknown Fields Error
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: unknown_fields_error
+                      message: 'Unknown field(s) provided: {unknown_fields}'
+                      source:
+                        resource: Orders
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                expired_session_token:
+                  summary: Expired Session Token
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: expired_session_token
+                      message: This token has expired
+                      source:
+                        resource: Session_Token
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '404':
+          description: __Not Found__ - The requested resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              example:
+                path: /api/orders/{order_ref}/refunds/
+                errors:
+                - code: resource_not_found
+                  message: Order with ref {order_ref} does not exist for current Merchant with FNS {fns_number}
+                  source:
+                    resource: Orders
+                    ref: '{order_ref}'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/orders/{order_ref}/refunds/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unknown exception from EBT network
+                      source:
+                        resource: Unknown
+      x-operation-id-source: normalized
+      x-operation-id-original: Get all order refunds
+  /api/orders/{order_ref}/refunds/{refund_ref}/:
+    parameters:
+    - name: order_ref
+      in: path
+      description: A unique reference hash for the Forage `Order`, returned when the order’s parent [`Session`](https://docs.joinforage.app/reference/forage-sessions) was created.
+      required: true
+      schema:
+        type: string
+        default: 93410bcaff
+    - name: refund_ref
+      in: path
+      description: A unique reference hash for the Forage `OrderRefund`, returned when the [`OrderRefund`](https://docs.joinforage.app/reference/order-refunds) was created.
+      required: true
+      schema:
+        type: string
+    - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+    - $ref: '#/components/parameters/MerchantAccountHeader'
+    - $ref: '#/components/parameters/APIVersionHeader'
+    get:
+      tags:
+      - Order Refunds
+      summary: Retrieve an OrderRefund
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request GET \\\n    --url https://api.sandbox.joinforage.app/api/orders/<order_ref>/refunds/45e3f12a90/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json'\n"
+      description: 'A `GET` request to `/orders/{order_ref}/refunds/{refund_ref}/` retrieves the specified refund for a given order.
+
+
+        On success, the API responds with the `OrderRefund`.
+
+
+        Use this endpoint to inspect the outcome of an order refund, including updated `receipt` information to display to the customer.'
+      operationId: GetAnOrderRefund
+      security:
+      - OAuth2:
+        - internal
+        - hosted_checkout
+        - pinpad_only
+      responses:
+        '200':
+          $ref: '#/components/responses/OrderRefund200'
+        '400':
+          description: __Bad request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/orders/{order_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/orders/{order_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+                unknown_fields_error:
+                  summary: Unknown Fields Error
+                  value:
+                    path: /api/orders/{order_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: unknown_fields_error
+                      message: 'Unknown field(s) provided: {unknown_fields}'
+                      source:
+                        resource: Orders
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                expired_session_token:
+                  summary: Expired Session Token
+                  value:
+                    path: /api/orders/{order_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: expired_session_token
+                      message: This token has expired
+                      source:
+                        resource: Session_Token
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/orders/{order_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '404':
+          description: __Not Found__ - The requested resource was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              example:
+                path: /api/orders/{order_ref}/refunds/{refund_ref}/
+                errors:
+                - code: resource_not_found
+                  message: Order with ref {order_ref} does not exist for current Merchant with FNS {fns_number}
+                  source:
+                    resource: Orders
+                    ref: '{order_ref}'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/orders/{order_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Orders
+                        ref: '{order_ref}'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/orders/{order_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unknown exception from EBT network
+                      source:
+                        resource: Unknown
+      x-operation-id-source: normalized
+      x-operation-id-original: Get an order refund
+components:
+  schemas:
+    ProductDataResponse:
+      type: object
+      required:
+      - id
+      - name
+      - upc
+      - unit_price
+      - quantity
+      - eligibility
+      - snap_amount
+      - cash_amount
+      - credit_debit_amount
+      - tax_collected
+      - taxes_charged
+      - taxes_exempted
+      properties:
+        id:
+          type: integer
+          description: The unique identifier for the product.
+        name:
+          type: string
+          description: The name of the product.
+        upc:
+          type:
+          - string
+          - 'null'
+          description: The UPC of the product.
+        gtin:
+          type: string
+          description: The GTIN (Global Trade Item Number) of the product.
+        unit_price:
+          type: string
+          format: currency
+          description: The unit price of the product, represented as a numeric string.
+        quantity:
+          type: integer
+          description: The quantity of the product.
+        tax_rate:
+          type: string
+          format: decimal
+          description: The tax rate for the product, represented as a decimal string with at most six decimal places. A value of `0` indicates a tax rate of 0%, and a value of `1` indicates a tax rate of 100%. To set a 2% tax rate, for example, set the value to `0.02`. Use this field if the product is subject to only one tax rate. If multiple tax rates apply, for example both a state grocery tax and a sweetened beverage tax, then use the `tax_rate_list` param instead of `tax_rate`.
+        tax_rate_list:
+          type: array
+          items:
+            type: object
+            required:
+            - imposed_by
+            - tax_rate
+            properties:
+              imposed_by:
+                type: string
+                description: The entity applying the tax to this item.
+              tax_rate:
+                type: string
+                format: decimal
+                description: The tax rate applied to the item by the entity described in the `imposed_by` field, represented as a decimal string. If the product is subject to only one tax rate, then use the single `tax_rate` param instead of `tax_rate_list`.
+              taxes_charged:
+                type:
+                - string
+                - 'null'
+                format: currency
+                description: The portion of taxes charged for this item attributable to the `imposed_by` entity, represented as a numeric string.
+              taxes_exempted:
+                type:
+                - string
+                - 'null'
+                format: currency
+                description: The portion of taxes exempted for this item attributable to the `imposed_by` entity, represented as a numeric string.
+        eligibility:
+          type:
+          - string
+          - 'null'
+          enum:
+          - snap
+          - ebt_cash
+          - non_ebt
+          description: The eligibility of the product. Must be `snap`, `ebt_cash`, or `non_ebt`.
+        snap_amount:
+          type:
+          - string
+          - 'null'
+          format: currency
+          description: The amount paid for this product using SNAP benefits in USD, represented as a numeric string. Precision is supported to the penny.
+        cash_amount:
+          type:
+          - string
+          - 'null'
+          format: currency
+          description: The amount paid for this product using EBT Cash benefits in USD, represented as a numeric string. Precision is supported to the penny.
+        credit_debit_amount:
+          type:
+          - string
+          - 'null'
+          format: currency
+          description: The amount paid for this product using credit or debit card in USD, represented as a numeric string. Precision is supported to the penny.
+        tax_collected:
+          type:
+          - string
+          - 'null'
+          format: currency
+          description: The tax amount collected for this product in USD, represented as a numeric string. Precision is supported to the penny.
+        taxes_charged:
+          type:
+          - string
+          - 'null'
+          format: currency
+          description: The amount of taxes charged for this product in USD, represented as a numeric string. Precision is supported to the penny.
+          example: '2.47'
+        taxes_exempted:
+          type:
+          - string
+          - 'null'
+          format: currency
+          description: The amount of taxes exempted for this product in USD, represented as a numeric string. Precision is supported to the penny.
+          example: '1.83'
+    CustomerIDField:
+      type: string
+      maxLength: 64
+      description: '**⚠️ If you’re integrating Forage with a POS Terminal, then do not use this param. It is only supported for online transactions.**
+
+
+        A unique identifier for the end customer making the payment.
+
+
+        Forage automatically adds the `customer_id` to the Session''s corresponding `Order` and `OrderPayments`.
+
+
+        This field helps Forage''s servers more quickly identify the customer associated with the request. While `customer_id` is not technically required, if you omit it then requests could take longer to process. **It is strongly recommended to pass customer_id.**
+
+
+        If you''re providing your internal customer ID, then we recommend that you hash the value before sending it on the payload.
+
+
+        Each customer should only have one unique `customer_id`. For example, if you create both a `PaymentMethod` and a Forage `Session` (Fully Hosted or Custom) or `Payment` (SDK) for the same customer, then the `customer_id` should be the same in both requests to ensure continuity of stored payment methods.
+
+        '
+    ExternalOrderIDField:
+      type: string
+      maxLength: 64
+      description: 'A unique identifier for the order as created by the merchant or platform (not Forage).
+
+
+        When a merchant or platform passes this order ID to Forage, it persists in each Forage transaction related to the `Order`. This field enables merchants to map order IDs in their system to corresponding Forage `Order` IDs.
+
+
+        **You must build with Forage Version `2023-05-15` or later to use `external_order_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.
+
+        '
+    OrderRefundByProductResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/OrderRefundResponse'
+    OrderResponse:
+      type: object
+      required:
+      - ref
+      - snap_total
+      - ebt_cash_total
+      - delivery_address
+      - is_delivery
+      - success_redirect_url
+      - cancel_redirect_url
+      - supported_benefits
+      - psp_customer_id
+      - customer_id
+      - external_order_id
+      - external_location_id
+      - status
+      - payments
+      - refunds
+      - success_date
+      - receipt
+      - expires_at
+      - is_commercial_shipping
+      - previous_errors
+      properties:
+        ref:
+          type: string
+          description: A unique reference hash for the Forage `Order` object.
+          example: 93410bcaff
+        snap_total:
+          type: string
+          format: currency
+          description: The SNAP eligible portion of the order cost in USD, represented as a numeric string. Precision is supported to the penny.
+          example: '25.99'
+        ebt_cash_total:
+          type: string
+          format: currency
+          description: The portion of the `Order` total, in USD, that is EBT Cash eligible only, represented as a numeric string. Precision is supported to the penny.
+          example: '5.99'
+        remaining_total:
+          type: string
+          format: currency
+          description: The portion of the `Order` total, in USD, that is neither SNAP eligible nor EBT Cash eligible, represented as a numeric string. This amount must be charged to a credit or debit card, with precision supported to the penny. _This value is returned only for [Fully Hosted Sessions](https://docs.joinforage.app/reference/forage-sessions#fully-hosted-session) and is not included if the `Order` was created using a POST request to [`/capture_sessions/`](https://docs.joinforage.app/reference/create-capture-session)._
+          example: '10.99'
+        product_list:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductDataResponse'
+          description: A list of the products in the customer's cart. If there are no taxes applied to any of the products, then this field can be empty. _This value is only returned for [Fully Hosted Sessions](https://docs.joinforage.app/reference/forage-sessions#fully-hosted-session). It is not returned if the `Order` was created via a POST to [`/capture_sessions/`](https://docs.joinforage.app/reference/create-capture-session)._
+          example: []
+        platform_fee:
+          type: string
+          format: decimal
+          description: An optional field, for use by a platform supporting multiple merchants, that indicates the percentage cut of each payment that the platform charges as a fee. Represented as a decimal string.
+          example: '0.05'
+        delivery_address:
+          $ref: '#/components/schemas/DeliveryAddressData'
+        is_delivery:
+          type: boolean
+          description: Whether the order is for delivery or pickup. This information is required per FNS regulations. Defaults to `false` if not provided.
+          example: true
+        success_redirect_url:
+          type: string
+          description: The URL to redirect your customer to if the order is completed successfully, passed in the original request to create a `Session`.
+          example: https://www.your-app.com/?status=SUCCEEDED
+        cancel_redirect_url:
+          type: string
+          description: The URL to redirect your customer to if they cancel the order, passed in the original request to create a `Session`.
+          example: https://www.your-app.com/?status=CANCELED
+        supported_benefits:
+          type: array
+          items:
+            type: string
+          description: 'A list that limits the types of payment methods that can be applied at checkout, including any or all of the values in: `["snap", "ebt_cash", "non_ebt"]`. Use `supported_benefits` **only** if you want to restrict the possible payment method types. Omit this field in all other cases. For example, pass `["snap", "non_ebt"]` if you want to accept SNAP and credit card payments only (excluding EBT Cash).
+
+            '
+          example:
+          - snap
+          - non_ebt
+        psp_customer_id:
+          type:
+          - string
+          - 'null'
+          description: 'The third-party credit/debit payment processor''s unique identifier for the customer. _This value is returned as `null` if the `Order` was created via a POST to [`/capture_sessions/`](https://docs.joinforage.app/reference/create-capture-session)._
+
+
+            **You must build with Forage Version `2023-05-15` or later to use `psp_customer_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.
+
+            '
+          example: cus_AJ6yA7mRH34mJT
+        customer_id:
+          allOf:
+          - $ref: '#/components/schemas/CustomerIDField'
+          example: my_user_id
+        external_order_id:
+          allOf:
+          - $ref: '#/components/schemas/ExternalOrderIDField'
+        external_location_id:
+          type:
+          - string
+          - 'null'
+          description: A unique identifier for the physical fulfillment location.
+        status:
+          type: string
+          description: 'The status of the `Order` in the Forage lifecycle. One of:
+
+
+            - `canceled`
+
+            - `draft` (the status at the start, when a Session is created)
+
+            - `failed`
+
+            - `processing`
+
+            - `succeeded`
+
+
+            If the value is `failed`, then [inspect the associated Order Payments](https://docs.joinforage.app/reference/get-all-order-payments) to determine the cause of the error.
+
+            '
+          enum:
+          - draft
+          - processing
+          - failed
+          - succeeded
+          - canceled
+          example: draft
+        payments:
+          type: array
+          description: An array of the unique reference hashes for any Forage `OrderPayment` objects associated with the `Order`.
+          items:
+            type: string
+            description: Payment ref
+          example: []
+        refunds:
+          type: array
+          description: An array of the unique reference hashes for any Forage `OrderRefund` objects associated with the `Order`.
+          items:
+            type: string
+            description: Refund ref
+          example: []
+        success_date:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: A UTC timestamp of the date when the `Order` was successfully charged. This value is `null` if the `status` of the `Order` is not yet `succeeded`.
+          example: '2021-06-16T00:11:50.000000Z'
+        receipt:
+          description: 'Most of the information that you''re required to display to the customer, according to FNS regulations.
+
+
+            This field is `null` if the data that populates the receipt is not yet available.
+
+
+            The total amount paid by the customer is `snap_amount` + `ebt_cash_amount` + `other_amount`. This amount will be settled with the merchant after applying Forage''s fees.
+
+            '
+          allOf:
+          - $ref: '#/components/schemas/ReceiptData'
+        expires_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          description: 'A UTC timestamp of when the `Order` will expire if it is not captured or canceled, set to 30 minutes from when the `Order` is created.
+
+
+            If the `status` of the `Order` is `succeeded` or `canceled`, then the `expires_at` value is `null`.
+
+            '
+          example: '2021-06-16T00:41:50.000000Z'
+        is_commercial_shipping:
+          type:
+          - boolean
+          - 'null'
+          description: Whether the order is to be shipped commercially. FNS uses this value in its database for statistics.
+        previous_errors:
+          $ref: '#/components/schemas/ErrorsArray'
+    OrderRefundRequest:
+      type: object
+      description: This object represents an order refund. It is associated with a previously created OrderPayment object. Funds will be refunded to the PaymentMethod originally charged.
+      properties:
+        payment:
+          type: string
+          description: A unique reference hash for the Forage `OrderPayment` to be refunded, returned when the [`OrderPayment` was created](https://docs.joinforage.app/reference/create-order-payment).
+        amount:
+          type: string
+          format: decimal
+          description: 'The amount to be refunded in USD. Does not need to equal the `amount` field of the `OrderPayment`, if a partial refund. Precision is supported to the penny.
+
+
+            The minimum amount that can be refunded is `0.01`.
+
+            '
+        reason:
+          type: string
+          description: A string that describes why the refund is happening.
+        metadata:
+          $ref: '#/components/schemas/MetadataObject'
+        merchant_fixed_settlement:
+          type: string
+          format: decimal
+          description: The fixed amount in USD that should be restored to the merchant from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny.
+        platform_fixed_settlement:
+          type: string
+          format: decimal
+          description: The fixed amount in USD that should be restored to the platform from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny.
+        external_order_id:
+          $ref: '#/components/schemas/ExternalOrderIDField'
+      required:
+      - payment
+      - amount
+      - reason
+      - metadata
+    DeliveryAddressData:
+      type: object
+      required:
+      - line1
+      - zipcode
+      description: '⚠️ **Exception**: If the purchase is made in-store via a POS Terminal, then a `delivery_address` is not required when creating a `Payment`.
+
+
+        The address for delivery or pickup of the `Order`. Per FNS regulations, this value must always be provided. If the `Order` is for pickup, then use the merchant address.
+
+        '
+      properties:
+        city:
+          type: string
+          description: The name of the city.
+        country:
+          type: string
+          description: Either `us` or `US`. Defaults to `US` if not provided.
+        line1:
+          type: string
+          description: The first line of the street address.
+        line2:
+          type:
+          - string
+          - 'null'
+          description: The second line of the street address.
+        zipcode:
+          type: string
+          description: The zip or postal code.
+        state:
+          type: string
+          description: The two-letter abbreviation, can be upper or lowercase, for the US state.
+    MetadataObject:
+      type: object
+      description: 'A required object containing merchant-defined key-value pairs to provide additional context for the payment.
+
+
+        Merchants should use this field to store **reference information** relevant to the transaction (for example, order details, system identifiers, or tracking data). This helps link the payment to records within their system.
+
+
+        Pass an empty object (`{}`) if no additional information is available.
+
+
+        > ⚠️ Personally Identifiable Information
+
+        >
+
+        > **Do not include personally identifiable information (PII)** such as names, emails, or payment details.
+
+        '
+    OrderRefundResponse:
+      allOf:
+      - $ref: '#/components/schemas/OrderRefundRequest'
+      - type: object
+        properties:
+          ref:
+            type: string
+            description: A unique reference hash for the `OrderRefund`.
+            example: 45e3f12a90
+          order:
+            type: string
+            description: The unique reference hash for the parent Forage `Order`.
+            example: 83b1c754ae
+          funding_type:
+            type: string
+            description: 'A string that represents the type of tender. One of:
+
+
+              - `benefit`
+
+              - `credit_payfac`
+
+              - `credit_tpp`
+
+              - `ebt_cash`
+
+              - `ebt_snap`
+
+              - `wic`
+
+              '
+            enum:
+            - benefit
+            - credit_payfac
+            - credit_tpp
+            - ebt_snap
+            - ebt_cash
+            - wic
+            example: ebt_snap
+          status:
+            type: string
+            description: 'The status of the `OrderRefund`. One of:
+
+
+              - `canceled`: The `OrderRefund` has been voided and can’t be changed.
+
+
+              - `expired`: The `OrderRefund` has expired and can’t be used.
+
+
+              - `failed`: The `OrderRefund` failed to process. Check the `receipt.message` field for a description of the error.
+
+
+              - `processing`: The outcome of the `OrderRefund` is pending, and the refund can’t be modified. _This status is not returned if you’re using Forage version `2024-01-08` or higher._
+
+
+              - `requires_confirmation`: The `OrderRefund` requires confirmation before it can be processed. Contact Forage support to confirm this refund.
+
+
+              - `succeeded`: The `OrderRefund` has been successfully processed and will be included in settlement.
+
+              '
+            enum:
+            - canceled
+            - expired
+            - failed
+            - processing
+            - requires_confirmation
+            - succeeded
+            example: processing
+          last_processing_error:
+            type:
+            - object
+            - 'null'
+            description: The `code` and `message` values corresponding to the most recent [Payments API error](https://docs.joinforage.app/reference/errors#payments-api-errors). Always `null` when the `Payment` is created.
+            example: null
+          created:
+            type: string
+            format: date-time
+            description: A UTC timestamp that indicates when this object was created, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+            example: '2021-06-16T00:11:50.000000Z'
+          updated:
+            type: string
+            format: date-time
+            description: A UTC timestamp that indicates when this object was last modified, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+            example: '2021-06-16T00:11:50.000000Z'
+          receipt:
+            allOf:
+            - $ref: '#/components/schemas/ReceiptData'
+          tpp_lookup_id:
+            type:
+            - string
+            - 'null'
+            description: 'The unique identifier from the relevant credit TPP or null for EBT refunds. For Stripe integrations, this is the id of the Refund object on Stripe''s backend.
+
+              '
+            example: re_3JemUSGfBYJeLEva0af6My64
+        required:
+        - ref
+        - order
+        - funding_type
+        - created
+        - updated
+        - status
+        - amount
+        - metadata
+    BulkRefundRequest:
+      type: object
+      description: This object represents a payment refund. It is associated with a previously created Payment object. Funds will be refunded to the PaymentMethod originally charged.
+      properties:
+        reason:
+          type: string
+          description: A string that describes why the order is to be refunded.
+        metadata:
+          $ref: '#/components/schemas/MetadataObject'
+        external_order_id:
+          $ref: '#/components/schemas/ExternalOrderIDField'
+      required:
+      - reason
+      - metadata
+    ErrorResponseObject:
+      type: object
+      description: An object that includes details about the error.
+      properties:
+        path:
+          type: string
+          description: The requested endpoint.
+        errors:
+          $ref: '#/components/schemas/ErrorsArray'
+    BalanceResponse:
+      type: object
+      description: An object that represents an EBT cardholder's account balance.
+      properties:
+        id:
+          type: integer
+          description: The unique identifier for the balance record.
+          example: 12345
+        snap:
+          type: string
+          format: currency
+          description: The available SNAP balance in USD on the customer’s EBT Card, represented as a numeric string.
+        non_snap:
+          type: string
+          format: currency
+          description: The available EBT Cash balance in USD on the customer's EBT Card, represented as a numeric string.
+        updated:
+          type: string
+          format: date-time
+          description: A UTC timestamp that indicates when the funds in the account last changed, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+        sequence_number:
+          type: string
+          description: A transaction number for this `PaymentMethod`'s most recent balance check. Returned only for POS Terminal transactions; omitted from online merchant balance checks.
+    ErrorsArray:
+      type: array
+      description: An array with information about the error.
+      items:
+        type: object
+        properties:
+          code:
+            type: string
+            description: A short string that represents the error.
+          message:
+            type: string
+            description: A developer-facing message with more details about the error, not to be displayed to customers.
+          source:
+            type: object
+            properties:
+              resource:
+                type: string
+                description: The type of the Forage resource involved in the error.
+              ref:
+                type: string
+                description: If applicable, the ten character reference hash of the Forage resource that caused the error. An empty string if no specific individual resource was involved.
+          details:
+            type: object
+            description: Additional details about the error, if applicable.
+      example: []
+    ReceiptData:
+      type: object
+      description: 'Most of the information that you''re required to display to the customer, according to FNS regulations.
+
+
+        This field is `null` if the data that populates the receipt is not yet available.
+
+
+        The total amount paid by the customer is `snap_amount` + `ebt_cash_amount` + `other_amount`. This amount will be settled with the merchant after applying Forage''s fees.
+
+        '
+      properties:
+        ref_number:
+          type: string
+          description: 'A unique reference hash for the Forage `Order`, `Payment`, or `Refund` associated with this receipt.
+
+
+            Note: `receipt.ref_number` equals `ref`.
+
+            '
+          default: 45e3f12a90
+        is_voided:
+          type: boolean
+          description: Whether the transaction associated with this receipt has been voided. If `false`, then the transaction finished processing as expected. If `true`, then the transaction was reversed.
+        snap_amount:
+          type: string
+          description: The USD amount charged/refunded to the SNAP balance of the EBT Card, represented as a numeric string.
+          default: '25.99'
+        ebt_cash_amount:
+          type: string
+          format: currency
+          description: The USD amount charged/refunded to the EBT Cash balance of the EBT Card, represented as a numeric string.
+          default: '10.99'
+        cash_back_amount:
+          type:
+          - string
+          - 'null'
+          format: currency
+          description: The USD amount of cash back given to the customer, represented as a numeric string.
+          default: '0.00'
+        other_amount:
+          type: string
+          format: currency
+          description: The USD amount charged/refunded to any payment method that is not an EBT Card, represented as a numeric string.
+          default: '5.99'
+        sales_tax_applied:
+          type: string
+          format: currency
+          description: The USD amount of taxes charged to the customer’s non-EBT payment instrument, represented as a numeric string.
+          default: '5.16'
+        balance:
+          allOf:
+          - $ref: '#/components/schemas/BalanceResponse'
+        last_4:
+          type: string
+          description: The last four digits of the EBT Card number.
+          default: '3456'
+        message:
+          type: string
+          description: A message from the EBT payment network that must be displayed to the EBT cardholder.
+          default: Approved
+        transaction_type:
+          type: string
+          enum:
+          - Order
+          - Refund
+          - Payment
+          description: 'A constant string that is used to identify the transaction type associated with the receipt.
+
+            '
+          default: Refund
+        created:
+          type: string
+          format: date-time
+          description: A UTC timestamp of when the Forage transaction object was created, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+          default: '2021-06-16T00:11:50.000000Z'
+        sequence_number:
+          type:
+          - string
+          - 'null'
+          description: The terminal transaction sequence number for POS transactions. `null` for online (non-POS) transactions.
+    OrderRefundByProductRequest:
+      type: object
+      description: This object represents a request to create refunds for specific products in an Order. It creates OrderRefund objects for the specified products and refunds the appropriate amounts to their original payment methods.
+      properties:
+        products:
+          type: array
+          description: A list of the products that need to be returned.
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                description: A unique identifier for the product.
+                example: 1235
+              quantity:
+                type: string
+                format: decimal
+                description: The quantity of the product to refund, as a decimal string. For example, `'2.00'`.
+                example: '2.00'
+            required:
+            - id
+            - quantity
+        reason:
+          type: string
+          description: A string that describes why the refund is happening.
+          example: Customer returned damaged items
+        metadata:
+          allOf:
+          - $ref: '#/components/schemas/MetadataObject'
+          - description: 'A required object containing merchant-defined key-value pairs to provide additional context for the payment.
+
+
+              Merchants should use this field to store **reference information** relevant to the transaction (for example, order details, system identifiers, or tracking data). This helps link the payment to records within their system.
+
+
+              Pass an empty object (`{}`) if no additional information is available.
+
+              '
+      required:
+      - products
+      - reason
+      - metadata
+  requestBodies:
+    OrderRefundByProduct:
+      description: Pass the below parameters to create refunds for specific products in an Order.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OrderRefundByProductRequest'
+    BulkRefund:
+      description: Forage attaches the below parameters to every OrderRefund created as part of refunding the entire order.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BulkRefundRequest'
+    OrderRefund:
+      description: Pass the below parameters to create an OrderRefund.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OrderRefundRequest'
+  parameters:
+    AuthenticationBearerTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 [authentication token](https://docs.joinforage.app/docs/authentication#authentication-tokens) that validates the request. Send a `POST` to the [`/o/token/`](https://docs.joinforage.app/reference/create-authentication-token) endpoint to generate an authentication token. Pass the token in this header after the word `Bearer` and a whitespace, for example `Bearer <api_key>`.
+      schema:
+        type: string
+      required: true
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      description: An alphanumeric key that clients can use to identify repeated requests that are dropped in transit. Generate a distinct key for every unique request and only re-use keys for retries.
+      schema:
+        type: string
+      required: true
+    APIVersionHeader:
+      name: API-Version
+      in: header
+      description: 'The [Forage version](https://docs.joinforage.app/reference/version-history), represented as a string with the format of a `YYYY-MM-DD` date.
+
+
+        If not specified in the request header, then the version defaults to the value set in the Forage dashboard.
+
+        '
+      schema:
+        type: string
+      required: false
+    MerchantAccountHeader:
+      name: Merchant-Account
+      in: header
+      description: A unique merchant ID that Forage provides during onboarding, as in `123ab45c67`. The Merchant ID can be found in the Forage [sandbox](https://dashboard.sandbox.joinforage.app/login/) or [production](https://dashboard.joinforage.app/login/) dashboard.
+      schema:
+        type: string
+      required: true
+  responses:
+    Error423:
+      description: __Locked__ - The request could not be completed because the target resource is currently locked.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseObject'
+          examples:
+            resource_locked:
+              summary: Resource Locked
+              value:
+                path: /api/example_path/
+                errors:
+                - code: resource_locked
+                  message: Request could not be completed because the resource is currently locked. Please try again later.
+                  source:
+                    resource: Idempotency_Key
+                    ref: ''
+    OrderRefund200:
+      description: __OK__ - Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OrderRefundResponse'
+    OrderRefundByProduct201:
+      description: __Created__ - Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OrderRefundByProductResponse'
+    Order200:
+      description: __OK__ - Success
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/OrderResponse'
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your access token from the /o/token/ API, separated by whitespace.
+
+        '
+      flows:
+        password:
+          tokenUrl: /o/token/
+          scopes:
+            hosted_checkout: 'Scope for tokens used by merchant applications which allow Forage to manage split tender processing (i.e. EBT + Credit/Debit).
+
+              '
+            pinpad_only: 'Scope for tokens used by merchant applications which manage their own split tender (i.e. Forage Checkout is used only for EBT processing).
+
+              '
+        clientCredentials:
+          tokenUrl: /o/token/
+          scopes:
+            internal: 'Scope for tokens used by Forage internal applications.
+
+              '
+            pin-protected: 'Scope for tokens which can access secure storage.
+
+              '
+            disbursement: 'Scope for tokens which can disburse money to merchants.
+
+              '
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your JWT bearer token from the /api/session_token/ end-point, separated by whitespace.
+
+        '
+externalDocs:
+  description: Forage documentation
+  url: https://docs.joinforage.app/
+x-provenance:
+  method: searched
+  source: https://docs.joinforage.app/reference
+  harvested: '2026-10-14'
+  tool: harvest-readme-openapi.py
+  note: Assembled verbatim from the OpenAPI definition ReadMe embeds in each operation page of the provider's developer portal; paths and components merged by API title, nothing authored.
+  assembled_from:
+  - https://docs.joinforage.app/reference/authorize-a-payment.md
+  - https://docs.joinforage.app/reference/bulk-revoke-auth-tokens.md
+  - https://docs.joinforage.app/reference/cancel-a-payment.md
+  - https://docs.joinforage.app/reference/cancel-an-order-payment.md
+  - https://docs.joinforage.app/reference/cancel-order.md
+  - https://docs.joinforage.app/reference/capture-a-payment-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/capture-a-payment.md
+  - https://docs.joinforage.app/reference/create-a-payment.md
+  - https://docs.joinforage.app/reference/create-authentication-token.md
+  - https://docs.joinforage.app/reference/create-capture-session.md
+  - https://docs.joinforage.app/reference/create-custom-balance-check-session.md
+  - https://docs.joinforage.app/reference/create-payment-method.md
+  - https://docs.joinforage.app/reference/create-payment-refund.md
+  - https://docs.joinforage.app/reference/create-refunds-by-product.md
+  - https://docs.joinforage.app/reference/create-session-token.md
+  - https://docs.joinforage.app/reference/create-session.md
+  - https://docs.joinforage.app/reference/delete-payment-method.md
+  - https://docs.joinforage.app/reference/get-a-payment-refund.md
+  - https://docs.joinforage.app/reference/get-all-order-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payment-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payments.md
+  - https://docs.joinforage.app/reference/get-an-order-payment.md
+  - https://docs.joinforage.app/reference/get-an-order-refund.md
+  - https://docs.joinforage.app/reference/get-order-report.md
+  - https://docs.joinforage.app/reference/get-order.md
+  - https://docs.joinforage.app/reference/get-payment-details.md
+  - https://docs.joinforage.app/reference/get-payment-method.md
+  - https://docs.joinforage.app/reference/get-payout-report.md
+  - https://docs.joinforage.app/reference/get-payout-transaction-report.md
+  - https://docs.joinforage.app/reference/get-transaction-report.md
+  - https://docs.joinforage.app/reference/patch-update-an-order-payment.md
+  - https://docs.joinforage.app/reference/refund-entire-order.md
+  - https://docs.joinforage.app/reference/refund-partial-order.md
+  - https://docs.joinforage.app/reference/retrieve-all-payments-for-merchant-order-id.md
+  - https://docs.joinforage.app/reference/retrieve-state-card-details.md
+  - https://docs.joinforage.app/reference/revoke-authentication-token.md
+  - https://docs.joinforage.app/reference/submit-pin-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/update-a-payment.md
+  - https://docs.joinforage.app/reference/update-order.md
+  - https://docs.joinforage.app/reference/update-payment-method.md
+  - https://docs.joinforage.app/reference/view-balance-session.md
+  - https://docs.joinforage.app/reference/void-a-payment-custom-checkout.md
+  - https://docs.joinforage.app/reference/void-a-refund.md
+  merge:
+    pages: 43
+    deduped: 461
+    conflicts_kept_first: 0

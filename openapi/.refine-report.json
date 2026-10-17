@@ -1,0 +1,45 @@
+{
+  "provider": "forage",
+  "sources": [
+    "forage-payments-api-openapi.yml"
+  ],
+  "outputs": [
+    "forage-bearer-tokens-api-openapi.yml",
+    "forage-card-details-api-openapi.yml",
+    "forage-custom-sessions-api-openapi.yml",
+    "forage-deferred-capture-api-openapi.yml",
+    "forage-fully-hosted-sessions-api-openapi.yml",
+    "forage-order-payments-api-openapi.yml",
+    "forage-order-refunds-api-openapi.yml",
+    "forage-orders-api-openapi.yml",
+    "forage-payment-methods-api-openapi.yml",
+    "forage-payment-refunds-api-openapi.yml",
+    "forage-payments-api-openapi.yml",
+    "forage-reports-api-openapi.yml",
+    "forage-sandbox-testing-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [
+    "forage-payments-api-openapi.yml: previously refined output kept for 43 operation(s) no archived document covers (e.g. /api/balance_sessions/ post, /api/balance_sessions/{session_ref}/ get, /api/capture_sessions/ post); its other 0 operation(s) came from the archive and were dropped from it. The archive is incomplete for this provider \u2014 re-harvest to restore _original/ as the full source of truth."
+  ],
+  "notes": [
+    "sourced from openapi/_original/ (0 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "forage-payments-api-openapi.yml: upgraded openapi 3.0.0 -> OpenAPI 3.2.0",
+    "forage-payments-api-openapi.yml: declared missing tag: Bearer Tokens",
+    "forage-payments-api-openapi.yml: declared missing tag: Card Details",
+    "forage-payments-api-openapi.yml: declared missing tag: Custom Sessions",
+    "forage-payments-api-openapi.yml: declared missing tag: Deferred Capture",
+    "forage-payments-api-openapi.yml: declared missing tag: Fully Hosted Sessions",
+    "forage-payments-api-openapi.yml: declared missing tag: Order Payments",
+    "forage-payments-api-openapi.yml: declared missing tag: Order Refunds",
+    "forage-payments-api-openapi.yml: declared missing tag: Orders",
+    "forage-payments-api-openapi.yml: declared missing tag: Payment Methods",
+    "forage-payments-api-openapi.yml: declared missing tag: Payment Refunds",
+    "forage-payments-api-openapi.yml: declared missing tag: Payments",
+    "forage-payments-api-openapi.yml: declared missing tag: Reports",
+    "forage-payments-api-openapi.yml: declared missing tag: Sandbox Testing",
+    "apis.yml register: written (+12 apis, 13 total)"
+  ],
+  "skipped": []
+}

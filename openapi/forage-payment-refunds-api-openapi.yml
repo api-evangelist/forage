@@ -1,0 +1,1546 @@
+openapi: 3.2.0
+info:
+  title: Forage Payments Payment Refunds API
+  description: The Forage Payments API is a REST API for processing Electronic Benefits Transfer (EBT) payments (SNAP and EBT Cash) in your e-commerce or in-store application.
+  contact:
+    name: API Support
+    email: engineering@joinforage.com
+  version: '2025-08-04'
+servers:
+- url: https://{environment}.joinforage.app
+  variables:
+    environment:
+      default: api.sandbox
+      enum:
+      - api
+      - api.sandbox
+security: []
+tags:
+- name: Payment Refunds
+paths:
+  /api/payments/{payment_ref}/refunds/:
+    parameters:
+    - name: payment_ref
+      in: path
+      description: A unique reference hash for the Forage `Payment` object, returned when the original [`Payment` was created](https://docs.joinforage.app/reference/create-a-payment).
+      required: true
+      schema:
+        type: string
+        default: cc3175bfea
+    post:
+      parameters:
+      - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+      - $ref: '#/components/parameters/MerchantAccountHeader'
+      - $ref: '#/components/parameters/IdempotencyKeyHeader'
+      - $ref: '#/components/parameters/APIVersionHeader'
+      tags:
+      - Payment Refunds
+      summary: Create a PaymentRefund
+      description: '> ⚠️ Refund Requests Must Be Server-Side
+
+        >
+
+        > To keep your app secure, requests to create a PaymentRefund should only be generated on the server-side.
+
+
+        > ⚠️ API Version Requirements
+
+        >
+
+        > You must use Forage version `2024-01-08` or higher for this endpoint to return populated `receipt` data. Earlier versions return the `receipt` value as `null`, so to retrieve the data you need to send `GET` requests to `/payments/{payment_ref}/refunds/{refund_ref}/` until the `status` of the refund is `succeeded`.
+
+
+        A `POST` request to `/payments/{payment_ref}/refunds/` tells Forage’s servers to refund an existing `Payment` object. Funds are refunded to the originally charged `PaymentMethod`.
+
+
+        On success, Forage automatically begins processing the refund, so this request has immediate financial side effects.
+
+
+        The API responds with a Forage `PaymentRefund` object that represents the transaction and an HTTP `201` status code.
+
+
+        #### Deferred refunds
+
+
+        ForageTerminalSDK integrations use this endpoint to complete **deferred refunds**. Here are the steps:
+
+
+        1. Collect the customer''s PIN using Forage’s POS SDK.
+
+        2. At the appropriate point in your refund workflow, call this endpoint to initiate the refund.
+
+        3. If an error occurs (e.g., *an Invalid PIN*), relay the message back to the POS client immediately so the user is notified promptly.
+
+
+        #### HTTP `201`
+
+
+        HTTP `201` is returned even if the refund attempt fails because Forage creates a `PaymentRefund` object to preserve a record of the refund regardless of the transaction outcome. To confirm that the outcome is a success, check that the `status` of the `PaymentRefund` is `succeeded`.
+
+
+        If the status is `failed`, then for Forage version `2024-01-08` or higher inspect the `receipt.message` field of the response for a description of the error. For earlier Forage versions, send a `GET` to `/payments/{payment_ref}/refunds/` to retrieve updated `receipt` data.'
+      operationId: CreateARefund(customCheckout)
+      security:
+      - OAuth2:
+        - internal
+        - pinpad_only
+      - BearerAuth: []
+      requestBody:
+        $ref: '#/components/requestBodies/PaymentRefund'
+      responses:
+        '201':
+          description: __Created__ - Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentRefundResponse'
+        '400':
+          description: __Bad request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_parse_request_body_amount:
+                  summary: Cannot Parse Request Body - Missing amount
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: Parsing amount field failed with message - This field is required.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                cannot_parse_request_body_amount_not_positive:
+                  summary: Cannot Parse Request Body - Amount must be positive
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: Parsing amount field failed with message - You must provide a positive value for the amount to refund
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                cannot_parse_request_body_mfs:
+                  summary: Cannot Parse Request Body - Merchant Fixed Settlement
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: Must include the merchant_fixed_settlement field to determine how funds will be settled!
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                cannot_parse_request_body_missing_pin:
+                  summary: Cannot Parse Request Body - Missing Pin
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: Refund for payment ref {payment_ref} requires a pin which is missing
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                cannot_parse_request_body_platform_fixed_settlement:
+                  summary: Cannot Parse Request Body - Platform Fixed Settlement
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: Must include the platform_fixed_settlement field to determine how funds will be settled!
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                cannot_parse_request_body_pos:
+                  summary: Cannot Parse Request Body - Missing POS Field
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: POS Terminal refunds requires pos_terminal field to be present in the request body
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                cannot_parse_request_body_reason_null:
+                  summary: Cannot Parse Request Body - Reason is null
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: Parsing reason field failed with message - This field may not be null.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                cannot_parse_request_body_reason_required:
+                  summary: Cannot Parse Request Body - Reason is required
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_parse_request_body
+                      message: Parsing reason field failed with message - This field is required.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                cannot_refund_after_90_days:
+                  summary: Cannot Refund After 90 Days
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_refund_after_90_days
+                      message: Per federal regulations, refunds to EBT payment methods cannot be processed after 90 days. Payment {payment_ref} succeeded on {}
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                cannot_refund_payment_amount:
+                  summary: Cannot Refund Payment - No Payment Amount
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_refund_payment
+                      message: Only Payments with a non-null amount can be refunded, but Payment with ref {} has no amount provided.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                cannot_refund_payment_missing_pin:
+                  summary: Cannot Refund Payment - Missing PIN
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_refund_payment
+                      message: Refund for payment ref {} misses a pin. Please use the SDK to collect pin first.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                cannot_refund_payment_state:
+                  summary: Cannot Refund Payment - Payment State Prohibited
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_refund_payment
+                      message: Only Payments in the succeeded state can be refunded, but Payment with ref {payment_ref} is in the requires_confirmation state
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                ebt_error_05:
+                  summary: EBT Error - General Denial
+                  value:
+                    ref: 66ca7f3c35
+                    merchant: '9777034'
+                    funding_type: ebt_snap
+                    amount: '1.00'
+                    description: Testing app payments (SNAP Purchase)
+                    metadata: {}
+                    payment_method: 6ef6acd145
+                    delivery_address: null
+                    is_delivery: false
+                    created: '2024-05-07T11:04:58.967491-07:00'
+                    updated: '2024-05-07T11:05:15.432620-07:00'
+                    status: failed
+                    last_processing_error: null
+                    success_date: null
+                    receipt:
+                      ref_number: 55ca7f3c35
+                      is_voided: false
+                      snap_amount: '1.00'
+                      ebt_cash_amount: '0.00'
+                      cash_back_amount: '0.00'
+                      other_amount: '0.00'
+                      sales_tax_applied: '0.00'
+                      balance:
+                        snap: '72.94'
+                        non_snap: '32.16'
+                        updated: '2021-06-16T00:11:50.000000-07:00'
+                      last_4: '4443'
+                      message: General denial - Cannot Process - Call Customer Service
+                      transaction_type: Payment
+                      created: '2024-05-07T11:05:15.427552-07:00'
+                      sequence_number: PA022ba7
+                    expires_at: '2024-05-07T18:35:15.432620Z'
+                    pos_terminal:
+                      terminal_id: 0783f5a4
+                      provider_terminal_id: Android Emulator
+                    sequence_number: PA022ba7
+                    external_location_id: null
+                    merchant_destination_account: null,
+                    errors:
+                    - code: ebt_error_05
+                      message: General denial - Cannot Process - Call Customer Service
+                      source:
+                        resource: Payments
+                        ref: 66ca7f3c35
+                    previous_errors: []
+                    refunds: []
+                ebt_error_90:
+                  summary: EBT Error - Host Not Available
+                  value:
+                    ref: 66ca7f3c35
+                    merchant: '9777034'
+                    funding_type: ebt_snap
+                    amount: '1.00'
+                    description: Testing app payments (SNAP Purchase)
+                    metadata: {}
+                    payment_method: 6ef6acd145
+                    delivery_address: null
+                    is_delivery: false
+                    created: '2024-05-07T11:04:58.967491-07:00'
+                    updated: '2024-05-07T11:05:15.432620-07:00'
+                    status: failed
+                    last_processing_error: null
+                    success_date: null
+                    receipt:
+                      ref_number: 55ca7f3c35
+                      is_voided: false
+                      snap_amount: '1.00'
+                      ebt_cash_amount: '0.00'
+                      cash_back_amount: '0.00'
+                      other_amount: '0.00'
+                      sales_tax_applied: '0.00'
+                      balance:
+                        snap: '72.94'
+                        non_snap: '32.16'
+                        updated: '2021-06-16T00:11:50.000000-07:00'
+                      last_4: '4443'
+                      message: Processor not logged on - Host Not Available
+                      transaction_type: Payment
+                      created: '2024-05-07T11:05:15.427552-07:00'
+                      sequence_number: PA022ba7
+                    expires_at: '2024-05-07T18:35:15.432620Z'
+                    pos_terminal:
+                      terminal_id: 0783f5a4
+                      provider_terminal_id: Android Emulator
+                    sequence_number: PA022ba7
+                    external_location_id: null
+                    merchant_destination_account: null,
+                    errors:
+                    - code: ebt_error_90
+                      message: Processor not logged on - Host Not Available
+                      source:
+                        resource: Payments
+                        ref: 66ca7f3c35
+                    previous_errors: []
+                    refunds: []
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+                pin_retrieval_error:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: pin_retrieval_error
+                      message: Refund for payment ref {payment_ref} requires a pin which is missing
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                refund_exceeds_order_total_merchant:
+                  summary: Refund Exceeds Order Total - Merchant Allocation
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: refund_exceeds_order_total
+                      message: Requested refund would push the total amount settled to the Merchant above the original Payment amount. Total fixed amount allocated to the Merchant is {}. Existing total of refunds is {}
+                      source:
+                        resource: Refunds
+                        ref: '{payment_ref}'
+                refund_exceeds_order_total_platform:
+                  summary: Refund Exceeds Order Total - Platform Allocation
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: refund_exceeds_order_total
+                      message: Requested refund would push the total amount settled to the Platform above the original Payment amount. Total fixed amount allocated to the Platform is {}. Existing total of refunds is {}
+                      source:
+                        resource: Refunds
+                        ref: '{payment_ref}'
+                refund_exceeds_order_total_settlement:
+                  summary: Refund Exceeds Order Total - Settlement
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: refund_exceeds_order_total
+                      message: 'Must allocate funds to merchant_fixed_settlement and platform_fixed_settlement correctly. Merchant funds to be allocated: {merchant_fixed_amount_still_available_for_refund}, Platform funds to be allocated: {platform_fixed_amount_still_available_for_refund}'
+                      source:
+                        resource: Refunds
+                        ref: '{payment_ref}'
+                refund_exceeds_order_total:
+                  summary: Refund Exceeds Order Total
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: refund_exceeds_order_total
+                      message: Requested refund would push the total amount refunded above the original Payment amount. Total amount paid is {}. Existing total of refunds is {}
+                      source:
+                        resource: Refunds
+                        ref: '{payment_ref}'
+                refund_exceeds_payment_zero:
+                  summary: Refund Exceeds Order Total - Refund Can't Be Zero
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: refund_exceeds_order_total
+                      message: Refund must be greater than zero!
+                      source:
+                        resource: Refunds
+                        ref: '{payment_ref}'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                resource_not_found:
+                  summary: Payment Not Found
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: resource_not_found
+                      message: Payment with ref {payment_ref} does not exist.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_change_request:
+                  summary: Cannot Change Request
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_change_request
+                      message: Two requests were submitted with the same idempotency key, but slightly different request bodies. Please use a new idempotency key if you intended to change the request body
+                      source:
+                        resource: Idempotency_Key
+        '423':
+          $ref: '#/components/responses/Error423'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                secure_storage_inaccessible:
+                  summary: Secure Storage Inaccessible
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: secure_storage_inaccessible
+                      message: Temporarily unable to access data in secure storage. Please try again.
+                      source:
+                        resource: ''
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unable to continue
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                ebt_processor_timeout:
+                  summary: EBT Processor Timeout
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: ebt_processor_timeout
+                      message: Unable to contact EBT processor, please try again shortly.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                processor_timeout:
+                  summary: Processor Timeout
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: processor_timeout
+                      message: External processor timed out
+                      source:
+                        resource: ''
+      x-operation-id-source: normalized
+      x-operation-id-original: Create a refund (custom checkout)
+    get:
+      parameters:
+      - $ref: '#/components/parameters/BearerTokenHeader'
+      - $ref: '#/components/parameters/MerchantAccountHeader'
+      - $ref: '#/components/parameters/APIVersionHeader'
+      tags:
+      - Payment Refunds
+      summary: Retrieve all PaymentRefunds for a Payment
+      description: 'A `GET` request to `/payments/{payment_ref}/refunds/` retrieves a list of all `PaymentRefunds` associated with a `Payment`.
+
+
+        To inspect a particular `PaymentRefund`, use `/payments/{payment_ref}/refunds/{refund_ref}/`.'
+      operationId: GetAllPaymentRefunds
+      security:
+      - OAuth2:
+        - internal
+        - pinpad_only
+      - BearerAuth: []
+      responses:
+        '200':
+          description: __OK__ - Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentRefundResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+                expired_session_token:
+                  summary: Expired Session Token
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: expired_session_token
+                      message: This token has expired
+                      source:
+                        resource: Session_Token
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                resource_not_found:
+                  summary: Refund Not Found
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: resource_not_found
+                      message: Refund with ref {refund_ref} does not exist for current Merchant with FNS {merchant.fns}.
+                      source:
+                        resource: Refunds
+                        ref: '{refund_ref}'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_change_request:
+                  summary: Cannot Change Request
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: cannot_change_request
+                      message: Two requests were submitted with the same idempotency key, but slightly different request bodies. Please use a new idempotency key if you intended to change the request body
+                      source:
+                        resource: Idempotency_Key
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unable to continue
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                ebt_processor_timeout:
+                  summary: EBT processor timeout
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/
+                    errors:
+                    - code: ebt_processor_timeout
+                      message: Unable to contact EBT processor, please try again shortly.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+      x-operation-id-source: normalized
+      x-operation-id-original: Get all payment refunds
+  /api/payments/{payment_ref}/refunds/{refund_ref}/:
+    parameters:
+    - name: payment_ref
+      in: path
+      description: A unique reference hash for the Forage `Payment` object, returned when the original [`Payment` was created](https://docs.joinforage.app/reference/create-a-payment).
+      required: true
+      schema:
+        type: string
+        default: b873fe62dc
+    - name: refund_ref
+      in: path
+      description: A unique reference hash for the Forage `PaymentRefund` object, returned when the original [`PaymentRefund` was created](https://docs.joinforage.app/reference/create-payment-refund).
+      required: true
+      schema:
+        type: string
+        default: 45e3f12a90
+    - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+    - $ref: '#/components/parameters/MerchantAccountHeader'
+    - $ref: '#/components/parameters/APIVersionHeader'
+    get:
+      parameters:
+      - $ref: '#/components/parameters/BearerTokenHeader'
+      tags:
+      - Payment Refunds
+      summary: Retrieve a PaymentRefund for a Payment
+      description: 'A `GET` request to `/payments/{payment_ref}/refunds/{refund_ref}/` retrieves a `PaymentRefund` associated with a `Payment`.
+
+
+        Use this endpoint to retrieve updated `receipt` and `balance` information for a `PaymentRefund` after the initial POST request creates the refund.'
+      operationId: GetAPaymentRefund
+      security:
+      - OAuth2:
+        - internal
+        - pinpad_only
+      - BearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/PaymentRefund200'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+                expired_session_token:
+                  summary: Expired Session Token
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: expired_session_token
+                      message: This token has expired
+                      source:
+                        resource: Session_Token
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                resource_not_found:
+                  summary: Refund Not Found
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: resource_not_found
+                      message: Refund with ref {refund_ref} does not exist for current Merchant with FNS {merchant.fns}.
+                      source:
+                        resource: Refunds
+                        ref: '{refund_ref}'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_change_request:
+                  summary: Cannot Change Request
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: cannot_change_request
+                      message: Two requests were submitted with the same idempotency key, but slightly different request bodies. Please use a new idempotency key if you intended to change the request body
+                      source:
+                        resource: Idempotency_Key
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unable to continue
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                ebt_processor_timeout:
+                  summary: EBT Processor Timeout
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/
+                    errors:
+                    - code: ebt_processor_timeout
+                      message: Unable to contact EBT processor, please try again shortly.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+      x-operation-id-source: normalized
+      x-operation-id-original: Get a payment refund
+  /api/payments/{payment_ref}/refunds/{refund_ref}/void/:
+    parameters:
+    - name: payment_ref
+      in: path
+      description: A unique reference hash for the Forage `Payment` object, returned when the original [`Payment` was created](https://docs.joinforage.app/reference/create-a-payment).
+      required: true
+      schema:
+        type: string
+    - name: refund_ref
+      in: path
+      description: A unique reference hash for the Forage `PaymentRefund` object, returned when the original [`PaymentRefund` was created](https://docs.joinforage.app/reference/create-payment-refund).
+      required: true
+      schema:
+        type: string
+    - $ref: '#/components/parameters/BearerTokenHeader'
+    - $ref: '#/components/parameters/MerchantAccountHeader'
+    - $ref: '#/components/parameters/IdempotencyKeyHeader'
+    - $ref: '#/components/parameters/APIVersionHeader'
+    post:
+      tags:
+      - Payment Refunds
+      summary: Void a PaymentRefund
+      description: '> ⚠️ POS Terminal Integrations Only
+
+        >
+
+        > This endpoint is only relevant to Forage POS Terminal integrations.
+
+
+        A `POST` request to `/payments//refunds//void/` reverses a successfully processed `PaymentRefund`. It reinstates the original charge to the customer.
+
+
+        On success, the API responds with the `PaymentRefund` object, and the `is_voided` value is `true`.
+
+
+        > ⚠️ Post-Void Balance Requires PIN Check
+
+        >
+
+        > The `balance` value in the response does not reflect the voided transaction. The returned `balance` amount accounts for the original transaction, before the void. A customer must check their balance via PIN entry to get the post-void balance.'
+      operationId: VoidARefund
+      security:
+      - OAuth2:
+        - pinpad_only
+      - BearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/PaymentRefund200'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_void_state:
+                  summary: Cannot Void - Invalid Refund State
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+                    errors:
+                    - code: cannot_void
+                      message: Refund with ref {} cannot be voided because it is in the {} state. Only refunds in the succeeded state can be voided
+                      source:
+                        resource: Refunds
+                        ref: '{refund_ref}'
+                cannot_void_submitted:
+                  summary: Cannot Void - Refund Not Submitted
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+                    errors:
+                    - code: cannot_void
+                      message: Refund with ref {} was not submitted to EBT processor and therefore cannot be voided. Only refunds to EBT payment methods can be voided
+                      source:
+                        resource: Refunds
+                        ref: '{refund_ref}'
+                invalid_input_data:
+                  summary: Invalid Input Data
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+                    errors:
+                    - code: invalid_input_data
+                      message: Query parameter missing or incomplete.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+                invalid_merchant_account:
+                  summary: Invalid Merchant Account
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+                    errors:
+                    - code: invalid_merchant_account
+                      message: Merchant account Merchant ID not valid.
+                      source:
+                        resource: Merchants
+                missing_idempotency_key:
+                  summary: Missing Idempotency Key
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+                    errors:
+                    - code: missing_idempotency_key
+                      message: You must include a value for the IDEMPOTENCY-KEY header in your requests to this endpoint.
+                      source:
+                        resource: Idempotency_Key
+                missing_merchant_account:
+                  summary: Missing Merchant Account
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+                    errors:
+                    - code: missing_merchant_account
+                      message: No merchant account was provided.
+                      source:
+                        resource: Merchants
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                invalid_token:
+                  summary: Invalid Token
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+                    errors:
+                    - code: invalid_token
+                      message: Incorrect authentication credentials.
+                      source:
+                        resource: Accounts
+                        ref: ''
+                expired_session_token:
+                  summary: Expired Session Token
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+                    errors:
+                    - code: expired_session_token
+                      message: This token has expired
+                      source:
+                        resource: Session_Token
+        '404':
+          description: Resource Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                resource_not_found:
+                  summary: Refund Not Found
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+                    errors:
+                    - code: resource_not_found
+                      message: Refund with ref {refund_ref} does not exist for current Merchant with FNS {merchant.fns}.
+                      source:
+                        resource: Refunds
+                        ref: '{refund_ref}'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                cannot_change_request:
+                  summary: Cannot Change Request
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+                    errors:
+                    - code: cannot_change_request
+                      message: Two requests were submitted with the same idempotency key, but slightly different request bodies. Please use a new idempotency key if you intended to change the request body
+                      source:
+                        resource: Idempotency_Key
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                too_many_requests:
+                  summary: Too Many Requests
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+                    errors:
+                    - code: too_many_requests
+                      message: Request was throttled, please try again later.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                unknown_server_error:
+                  summary: Unknown Server Error
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+                    errors:
+                    - code: unknown_server_error
+                      message: Unable to continue
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              examples:
+                ebt_processor_timeout:
+                  summary: EBT processor timeout
+                  value:
+                    path: /api/payments/{payment_ref}/refunds/{refund_ref}/void/
+                    errors:
+                    - code: ebt_processor_timeout
+                      message: Unable to contact EBT processor, please try again shortly.
+                      source:
+                        resource: Payments
+                        ref: '{payment_ref}'
+      x-operation-id-source: normalized
+      x-operation-id-original: Void a refund
+components:
+  responses:
+    PaymentRefund200:
+      description: Successful Refund response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PaymentRefundResponse'
+    Error423:
+      description: __Locked__ - The request could not be completed because the target resource is currently locked.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseObject'
+          examples:
+            resource_locked:
+              summary: Resource Locked
+              value:
+                path: /api/example_path/
+                errors:
+                - code: resource_locked
+                  message: Request could not be completed because the resource is currently locked. Please try again later.
+                  source:
+                    resource: Idempotency_Key
+                    ref: ''
+  schemas:
+    ErrorResponseObject:
+      type: object
+      description: An object that includes details about the error.
+      properties:
+        path:
+          type: string
+          description: The requested endpoint.
+        errors:
+          $ref: '#/components/schemas/ErrorsArray'
+    PaymentRefundResponse:
+      allOf:
+      - $ref: '#/components/schemas/PaymentRefundRequest'
+      - type: object
+        properties:
+          ref:
+            type: string
+            description: A unique reference hash for the `PaymentRefund`.
+            example: 45e3f12a90
+          payment_ref:
+            type: string
+            description: The unique reference hash for the `Payment` to be refunded, as passed in the path params of the request.
+            example: b873fe62dc
+          funding_type:
+            type: string
+            description: 'A string that represents the type of tender. One of:
+
+
+              - `benefit`
+
+              - `credit_tpp`
+
+              - `credit_payfac`
+
+              - `ebt_cash`
+
+              - `ebt_snap`
+
+              - `wic`
+
+              '
+            enum:
+            - ebt_snap
+            - ebt_cash
+            - credit_tpp
+            - credit_payfac
+            - benefit
+            - wic
+            example: ebt_snap
+          created:
+            type: string
+            format: date-time
+            description: A UTC timestamp that indicates when the `OrderRefund` was created, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+            example: '2021-06-16T00:11:50.000000Z'
+          updated:
+            type: string
+            format: date-time
+            description: A UTC timestamp that indicates when the `OrderRefund` was last modified, represented as an [ISO 8601 date-time](https://www.iso.org/iso-8601-date-and-time-format.html) string.
+            example: '2021-06-16T00:11:50.000000Z'
+          status:
+            type: string
+            description: 'The status of the refund. One of:
+
+
+              - `canceled`: The `PaymentRefund` object can’t be used.
+
+              - `expired`: The `PaymentRefund` has expired and can’t be used.
+
+              - `failed`: Check `receipt.message` for a description of the error.
+
+              - `processing`: The outcome of the refund is pending. _This status is not returned if you’re using Forage version `2024-01-08` or higher._
+
+              - `requires_confirmation`: The `PaymentRefund` requires confirmation before it can be processed. Contact Forage support to confirm this refund.
+
+              - `succeeded`: The refund has been successfully processed and will be included in settlement. It can’t be changed.
+
+              '
+            enum:
+            - canceled
+            - expired
+            - failed
+            - processing
+            - requires_confirmation
+            - succeeded
+            example: succeeded
+          last_processing_error:
+            type:
+            - object
+            - 'null'
+            description: The `code` and `message` values corresponding to the most recent [Payments API error](https://docs.joinforage.app/reference/errors#payments-api-errors).
+            example: null
+          receipt:
+            type:
+            - object
+            - 'null'
+            description: 'Most of the information that you''re required to display to the customer, according to FNS regulations.
+
+
+              This field is `null` if the data that populates the receipt is not yet available.
+
+
+              The total amount paid by the customer is `snap_amount` + `ebt_cash_amount` + `other_amount`. This amount will be settled with the merchant after applying Forage''s fees.
+
+              '
+            example:
+              ref_number: 45e3f12a90
+              is_voided: true
+              snap_amount: '25.99'
+              ebt_cash_amount: '10.99'
+              other_amount: '5.99'
+              sales_tax_applied: '5.16'
+              balance:
+                snap: '72.94'
+                non_snap: '32.16'
+                updated: '2021-06-16T00:11:50.000000Z'
+              last_4: '3456'
+              message: Approved
+              transaction_type: Refund
+              created: '2021-06-16T00:11:50.000000Z'
+          sequence_number:
+            type: string
+            description: A unique sequence number for the transaction, emitted for POS Terminal refunds.
+          previous_errors:
+            $ref: '#/components/schemas/ErrorsArray'
+        required:
+        - ref
+        - payment_ref
+        - funding_type
+        - created
+        - updated
+        - status
+        - amount
+        - metadata
+    PaymentRefundRequest:
+      type: object
+      description: This object represents a refund of a previously created Payment object. Funds will be refunded to the PaymentMethod originally charged.
+      properties:
+        amount:
+          type: string
+          format: decimal
+          description: 'A positive decimal string representing the amount of the `Payment` to refund in USD. If a partial refund, then this value does not need to equal the `amount` field of the original `Payment`. Precision is supported to the penny.
+
+
+            The minimum amount that can be refunded is `0.01`.
+
+            '
+          default: '25.99'
+        reason:
+          type: string
+          description: A string that describes why the `Payment` is to be refunded.
+          default: Order could not be delivered
+        metadata:
+          allOf:
+          - $ref: '#/components/schemas/MetadataObject'
+          - default:
+              psp_customer_id: cus_1234567890
+        merchant_fixed_settlement:
+          type: string
+          format: decimal
+          description: The fixed amount in USD that should be restored to the merchant from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny.
+          example: '5.11'
+        platform_fixed_settlement:
+          type: string
+          format: decimal
+          description: The fixed amount in USD that should be restored to the platform from EBT Cash payments prior to splitting by the `platform_fee`. Precision is supported to the penny.
+          example: '5.11'
+        external_order_id:
+          $ref: '#/components/schemas/ExternalOrderIDField'
+        pos_terminal:
+          type: object
+          description: '⚠️  This param is required for POS Terminal refunds. It is not supported for online-only.
+
+
+            An object that details information about the POS Terminal that processed the payment.
+
+            '
+          properties:
+            provider_terminal_id:
+              type: string
+              description: A unique string that identifies the POS Terminal.
+              example: '1234'
+      required:
+      - amount
+      - reason
+      - metadata
+    MetadataObject:
+      type: object
+      description: 'A required object containing merchant-defined key-value pairs to provide additional context for the payment.
+
+
+        Merchants should use this field to store **reference information** relevant to the transaction (for example, order details, system identifiers, or tracking data). This helps link the payment to records within their system.
+
+
+        Pass an empty object (`{}`) if no additional information is available.
+
+
+        > ⚠️ Personally Identifiable Information
+
+        >
+
+        > **Do not include personally identifiable information (PII)** such as names, emails, or payment details.
+
+        '
+    ExternalOrderIDField:
+      type: string
+      maxLength: 64
+      description: 'A unique identifier for the order as created by the merchant or platform (not Forage).
+
+
+        When a merchant or platform passes this order ID to Forage, it persists in each Forage transaction related to the `Order`. This field enables merchants to map order IDs in their system to corresponding Forage `Order` IDs.
+
+
+        **You must build with Forage Version `2023-05-15` or later to use `external_order_id`.** Either pass `2023-05-15` as the `API-Version` header on a per request basis, or set the version for all requests in the Forage dashboard.
+
+        '
+    ErrorsArray:
+      type: array
+      description: An array with information about the error.
+      items:
+        type: object
+        properties:
+          code:
+            type: string
+            description: A short string that represents the error.
+          message:
+            type: string
+            description: A developer-facing message with more details about the error, not to be displayed to customers.
+          source:
+            type: object
+            properties:
+              resource:
+                type: string
+                description: The type of the Forage resource involved in the error.
+              ref:
+                type: string
+                description: If applicable, the ten character reference hash of the Forage resource that caused the error. An empty string if no specific individual resource was involved.
+          details:
+            type: object
+            description: Additional details about the error, if applicable.
+      example: []
+  requestBodies:
+    PaymentRefund:
+      description: Pass the following fields in the body of the request to `/payments/{payment_ref}/refunds/` to initiate a `PaymentRefund`.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PaymentRefundRequest'
+  parameters:
+    IdempotencyKeyHeader:
+      name: Idempotency-Key
+      in: header
+      description: An alphanumeric key that clients can use to identify repeated requests that are dropped in transit. Generate a distinct key for every unique request and only re-use keys for retries.
+      schema:
+        type: string
+      required: true
+    AuthenticationBearerTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 [authentication token](https://docs.joinforage.app/docs/authentication#authentication-tokens) that validates the request. Send a `POST` to the [`/o/token/`](https://docs.joinforage.app/reference/create-authentication-token) endpoint to generate an authentication token. Pass the token in this header after the word `Bearer` and a whitespace, for example `Bearer <api_key>`.
+      schema:
+        type: string
+      required: true
+    MerchantAccountHeader:
+      name: Merchant-Account
+      in: header
+      description: A unique merchant ID that Forage provides during onboarding, as in `123ab45c67`. The Merchant ID can be found in the Forage [sandbox](https://dashboard.sandbox.joinforage.app/login/) or [production](https://dashboard.joinforage.app/login/) dashboard.
+      schema:
+        type: string
+      required: true
+    APIVersionHeader:
+      name: API-Version
+      in: header
+      description: 'The [Forage version](https://docs.joinforage.app/reference/version-history), represented as a string with the format of a `YYYY-MM-DD` date.
+
+
+        If not specified in the request header, then the version defaults to the value set in the Forage dashboard.
+
+        '
+      schema:
+        type: string
+      required: false
+    BearerTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 bearer token that validates the request. You can use either a short-lived [session token](https://docs.joinforage.app/docs/authentication#session-tokens) if the request is coming from the front-end, or an [authentication token](https://docs.joinforage.app/docs/authentication#authentication-tokens) for server-side requests. Pass the token in this header after the word `Bearer` and a whitespace, for example `Bearer <api_key>`.
+      schema:
+        type: string
+      required: true
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your access token from the /o/token/ API, separated by whitespace.
+
+        '
+      flows:
+        password:
+          tokenUrl: /o/token/
+          scopes:
+            hosted_checkout: 'Scope for tokens used by merchant applications which allow Forage to manage split tender processing (i.e. EBT + Credit/Debit).
+
+              '
+            pinpad_only: 'Scope for tokens used by merchant applications which manage their own split tender (i.e. Forage Checkout is used only for EBT processing).
+
+              '
+        clientCredentials:
+          tokenUrl: /o/token/
+          scopes:
+            internal: 'Scope for tokens used by Forage internal applications.
+
+              '
+            pin-protected: 'Scope for tokens which can access secure storage.
+
+              '
+            disbursement: 'Scope for tokens which can disburse money to merchants.
+
+              '
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your JWT bearer token from the /api/session_token/ end-point, separated by whitespace.
+
+        '
+externalDocs:
+  description: Forage documentation
+  url: https://docs.joinforage.app/
+x-provenance:
+  method: searched
+  source: https://docs.joinforage.app/reference
+  harvested: '2026-10-14'
+  tool: harvest-readme-openapi.py
+  note: Assembled verbatim from the OpenAPI definition ReadMe embeds in each operation page of the provider's developer portal; paths and components merged by API title, nothing authored.
+  assembled_from:
+  - https://docs.joinforage.app/reference/authorize-a-payment.md
+  - https://docs.joinforage.app/reference/bulk-revoke-auth-tokens.md
+  - https://docs.joinforage.app/reference/cancel-a-payment.md
+  - https://docs.joinforage.app/reference/cancel-an-order-payment.md
+  - https://docs.joinforage.app/reference/cancel-order.md
+  - https://docs.joinforage.app/reference/capture-a-payment-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/capture-a-payment.md
+  - https://docs.joinforage.app/reference/create-a-payment.md
+  - https://docs.joinforage.app/reference/create-authentication-token.md
+  - https://docs.joinforage.app/reference/create-capture-session.md
+  - https://docs.joinforage.app/reference/create-custom-balance-check-session.md
+  - https://docs.joinforage.app/reference/create-payment-method.md
+  - https://docs.joinforage.app/reference/create-payment-refund.md
+  - https://docs.joinforage.app/reference/create-refunds-by-product.md
+  - https://docs.joinforage.app/reference/create-session-token.md
+  - https://docs.joinforage.app/reference/create-session.md
+  - https://docs.joinforage.app/reference/delete-payment-method.md
+  - https://docs.joinforage.app/reference/get-a-payment-refund.md
+  - https://docs.joinforage.app/reference/get-all-order-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payment-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payments.md
+  - https://docs.joinforage.app/reference/get-an-order-payment.md
+  - https://docs.joinforage.app/reference/get-an-order-refund.md
+  - https://docs.joinforage.app/reference/get-order-report.md
+  - https://docs.joinforage.app/reference/get-order.md
+  - https://docs.joinforage.app/reference/get-payment-details.md
+  - https://docs.joinforage.app/reference/get-payment-method.md
+  - https://docs.joinforage.app/reference/get-payout-report.md
+  - https://docs.joinforage.app/reference/get-payout-transaction-report.md
+  - https://docs.joinforage.app/reference/get-transaction-report.md
+  - https://docs.joinforage.app/reference/patch-update-an-order-payment.md
+  - https://docs.joinforage.app/reference/refund-entire-order.md
+  - https://docs.joinforage.app/reference/refund-partial-order.md
+  - https://docs.joinforage.app/reference/retrieve-all-payments-for-merchant-order-id.md
+  - https://docs.joinforage.app/reference/retrieve-state-card-details.md
+  - https://docs.joinforage.app/reference/revoke-authentication-token.md
+  - https://docs.joinforage.app/reference/submit-pin-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/update-a-payment.md
+  - https://docs.joinforage.app/reference/update-order.md
+  - https://docs.joinforage.app/reference/update-payment-method.md
+  - https://docs.joinforage.app/reference/view-balance-session.md
+  - https://docs.joinforage.app/reference/void-a-payment-custom-checkout.md
+  - https://docs.joinforage.app/reference/void-a-refund.md
+  merge:
+    pages: 43
+    deduped: 461
+    conflicts_kept_first: 0

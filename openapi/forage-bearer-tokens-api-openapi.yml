@@ -1,0 +1,541 @@
+openapi: 3.2.0
+info:
+  title: Forage Payments Bearer Tokens API
+  description: The Forage Payments API is a REST API for processing Electronic Benefits Transfer (EBT) payments (SNAP and EBT Cash) in your e-commerce or in-store application.
+  contact:
+    name: API Support
+    email: engineering@joinforage.com
+  version: '2025-08-04'
+servers:
+- url: https://{environment}.joinforage.app
+  variables:
+    environment:
+      default: api.sandbox
+      enum:
+      - api
+      - api.sandbox
+security: []
+tags:
+- name: Bearer Tokens
+paths:
+  /api/session_token/:
+    parameters:
+    - $ref: '#/components/parameters/AuthenticationBearerTokenHeader'
+    - $ref: '#/components/parameters/MerchantAccountHeader'
+    post:
+      tags:
+      - Bearer Tokens
+      summary: Create a session token
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request POST \\\n    --url https://api.sandbox.joinforage.app/api/session_token/ \\\n    --header 'Authorization: Bearer <api_key>' \\\n    --header 'Merchant-Account: <merchant-id>' \\\n    --header 'accept: application/json' \\\n    --header 'content-type: application/json' \\\n    --data '\n{\n  \"customer_id\": \"cus_1234567890\"\n}\n'\n"
+      description: '> 📘 Authentication Guide
+
+        >
+
+        > For comprehensive details about authenticating with the Forage API, refer to the authentication guide.
+
+
+        > 📘 Session Token Length
+
+        >
+
+        > Session tokens are short-lived and expire after fifteen minutes.
+
+
+        > ⚠️ Authentication Token Required
+
+        >
+
+        > You need to create an authentication token before you can generate a session token.
+
+
+        A `POST` request to `/session_token/` creates a new session token. The token is returned as the `token` value in the response body.
+
+
+        A session token is a temporary OAuth 2.0 bearer token that expires after 15 minutes.
+
+
+        Session tokens are used in client-side requests. For example, `POST`s to create a Payment Method require session tokens in the `Authorization` header, and session tokens are passed as parameters to SDK methods that submit customer data.
+
+
+        You can optionally include a `customer_id` in the request body. This should be the same `customer_id` you pass when creating a PaymentMethod for the same customer, so Forage can associate the two.'
+      security: []
+      operationId: forage_oauth:forage_session_token
+      requestBody:
+        $ref: '#/components/requestBodies/SessionToken'
+      responses:
+        '201':
+          $ref: '#/components/responses/SessionToken201'
+        '401':
+          description: __Unauthorized__
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              example:
+                path: /api/session_token/
+                errors:
+                - code: invalid_token
+                  message: Incorrect authentication credentials.
+                  source:
+                    resource: OAuth_Access_Tokens
+                    ref: ''
+  /o/bulk_revoke/:
+    post:
+      tags:
+      - Bearer Tokens
+      summary: Bulk revoke authentication tokens
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request POST \\\n    --url https://api.sandbox.joinforage.app/o/bulk_revoke/ \\\n    --header 'accept: application/json' \\\n    --header 'content-type: application/json' \\\n    --data '\n{\n  \"client_id\": \"abc123\",\n  \"client_secret\": \"a1b2c3d45678\",\n  \"revoke_count\": 100\n}\n'\n"
+      description: '> 📘 Authentication Guide
+
+        >
+
+        > For comprehensive details about authenticating with the Forage API, refer to the authentication guide.
+
+
+        A `POST` request to `/o/bulk_revoke/` deletes a specified number of authentication tokens.
+
+
+        Tokens are revoked in chronological order based on expiry time. For example, setting `revoke_count` to `50` deletes the `50` oldest tokens. The `revoke_count` value can range between `1` and `1000`.'
+      security: []
+      operationId: forage_oauth:forage_bulk_revoke_token
+      requestBody:
+        $ref: '#/components/requestBodies/BulkRevokeTokens'
+      responses:
+        '200':
+          description: __OK__ - Success
+        '401':
+          description: __Unauthorized__
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseObject'
+              example:
+                path: /o/bulk_revoke/
+                errors:
+                - code: resource_not_found
+                  message: Invalid client id and client secret
+                  source:
+                    resource: OAuth_Access_Tokens
+                    ref: ''
+  /o/revoke_token/:
+    post:
+      tags:
+      - Bearer Tokens
+      summary: Revoke an authentication token
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request POST \\\n     --url https://api.sandbox.joinforage.app/o/revoke_token/ \\\n     --header 'accept: application/json' \\\n     --header 'content-type: application/x-www-form-urlencoded' \\\n     --data client_id=abc123 \\\n     --data client_secret=a1b2c3d4567 \\\n     --data token=sandbox_uXpcGMAMs7hhbw9JifUuJlzUZS3zWD\n"
+      description: '> 📘 Authentication Guide
+
+        >
+
+        > For comprehensive details about authenticating with the Forage API, refer to the authentication guide.
+
+
+        A `POST` request to `/o/revoke_token/` revokes a previously created authentication token.
+
+
+        You need your app’s Client ID and Client Secret from the Forage dashboard (sandbox, production) to revoke an authentication token. If you don’t yet have dashboard access, then please get in touch.
+
+
+        > 📘 Active Token Limits
+
+        >
+
+        > There can be up to 1000 active authentication tokens for a Client ID and Client Secret pair at any given time.'
+      security: []
+      operationId: forage_oauth:forage_revoke_token
+      requestBody:
+        $ref: '#/components/requestBodies/RevokeToken'
+      responses:
+        '200':
+          description: __OK__ - Success
+        '400':
+          description: __Bad request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: A string that describes the nature of the error.
+                  error_description:
+                    description: A string that includes more details about the error.
+              example:
+                error: invalid_request
+                error_description: Missing token parameter.
+  /o/token/:
+    parameters:
+    - $ref: '#/components/parameters/CreateAuthenticationTokenHeader'
+    post:
+      tags:
+      - Bearer Tokens
+      summary: Create an authentication token
+      x-readme:
+        code-samples:
+        - language: curl
+          code: "curl --request POST \\\n     --url https://api.sandbox.joinforage.app/o/token/ \\\n     --header 'Authorization: Basic <encoded_credentials>' \\\n     --header 'accept: application/json' \\\n     --header 'content-type: application/x-www-form-urlencoded' \\\n     --data expiration_time=604800 \\\n     --data grant_type=client_credentials \\\n     --data scope=hosted_checkout\n"
+      description: '> ⚠️ Use Session Tokens In Production
+
+        >
+
+        > To keep your app secure, long-lived authentication tokens in production are only for server-side requests. Client-side requests in production must use session tokens.
+
+
+        > 📘 Managing OAuth Token Expiration
+
+        >
+
+        > OAuth tokens expire after **7 days** by default (604800 seconds), but can be configured to expire sooner or up to 30 days. There can be up to 1000 active authentication tokens for a Client ID and Client Secret pair at any given time. To manage the number of active authentication tokens, use the `/o/revoke_token/` endpoint to revoke a single token, or `/o/bulk_revoke/` to revoke in bulk.
+
+
+        > 📘 Authentication Guide
+
+        >
+
+        > Check out the Forage authentication guide for more details on authentication tokens.
+
+
+        A `POST` request to `/o/token/` creates a new authentication token. The token is returned as the `access_token` value in the response body.
+
+
+        An authentication token is a long-lived OAuth 2.0 bearer token that validates requests from your backend to Forage. Pass an authentication token in the `Authorization` header of server-side requests to handle sensitive tasks like creating an order or capturing a payment.
+
+
+        You need your app’s Client ID and Client Secret from the Forage dashboard (sandbox, production) to generate an authentication token. If you don’t yet have dashboard access, then please get in touch.'
+      security: []
+      operationId: forage_oauth:forage_token
+      requestBody:
+        $ref: '#/components/requestBodies/Token'
+      responses:
+        '200':
+          $ref: '#/components/responses/Token200'
+        '400':
+          description: __Bad request__ - The request was not accepted because of an error in the request body or path.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: A string that describes the nature of the error.
+                  error_detail:
+                    type: string
+                    description: A detailed message explaining the error, if available.
+              examples:
+                unsupported_grant_type:
+                  summary: Unsupported Grant Type
+                  value:
+                    error: unsupported_grant_type
+                too_many_tokens:
+                  summary: Too Many Tokens
+                  value:
+                    error_code: too_many_tokens
+                    error_detail: You have reached the maximum amount of live tokens. You have 1000 access tokens.
+        '401':
+          description: __Unauthorized__
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: A string that describes the nature of the error.
+              example:
+                error: invalid_client
+components:
+  requestBodies:
+    Token:
+      description: Request payload body for server to issue an access token
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            properties:
+              expiration_time:
+                type: integer
+                description: 'The lifespan of the token in seconds. The acceptable range includes `86400` (one day) to `2592000` (30 days).
+
+
+                  Defaults to `604800` (7 days), if not set.
+
+                  '
+                default: 604800
+              grant_type:
+                type: string
+                description: The constant string `client_credentials`.
+              scope:
+                type: string
+                description: "The token’s permissions level. Possible values include:\n  - `accounts`: This scope is most useful to platforms that support multiple merchants. Use `accounts` to manage merchant-related data, for example to create a `Session` to onboard a new merchant via the `/accounts/merchants/onboarding_session/` endpoint.\n  - `hosted_checkout`: Use this scope for Fully Hosted integrations. Creates a token that only grants access to [create Fully Hosted Sessions](https://docs.joinforage.app/reference/create-session). The default scope.\n  - `pinpad_only`: Use this scope for Custom and SDK integrations. The most permissive token scope. Creates a token that grants access to start Sessions that collect a customer’s EBT Card PIN, and to perform all operations that a customer’s PIN authorizes, including creating payments and payment methods.\n  - `reporting`: The scope required to query`/reporting/` endpoints.\n\nTo create a token with multiple scopes, separate scope names with a space, for example: `hosted_checkout reporting`.\n"
+                default: hosted_checkout
+            required:
+            - grant_type
+    SessionToken:
+      description: Optional parameters to pass when creating a session token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SessionTokenRequest'
+    RevokeToken:
+      description: Request payload body for server revoke single token
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            $ref: '#/components/schemas/RevokeTokenRequest'
+    BulkRevokeTokens:
+      description: Request payload body for server bulk revoke tokens
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BulkRevokeTokenRequest'
+  schemas:
+    ErrorResponseObject:
+      type: object
+      description: An object that includes details about the error.
+      properties:
+        path:
+          type: string
+          description: The requested endpoint.
+        errors:
+          $ref: '#/components/schemas/ErrorsArray'
+    ErrorsArray:
+      type: array
+      description: An array with information about the error.
+      items:
+        type: object
+        properties:
+          code:
+            type: string
+            description: A short string that represents the error.
+          message:
+            type: string
+            description: A developer-facing message with more details about the error, not to be displayed to customers.
+          source:
+            type: object
+            properties:
+              resource:
+                type: string
+                description: The type of the Forage resource involved in the error.
+              ref:
+                type: string
+                description: If applicable, the ten character reference hash of the Forage resource that caused the error. An empty string if no specific individual resource was involved.
+          details:
+            type: object
+            description: Additional details about the error, if applicable.
+      example: []
+    RevokeTokenRequest:
+      type: object
+      description: The configuration for single token revocation.
+      properties:
+        client_id:
+          type: string
+          description: The client ID for your application, found in the Forage dashboard ([sandbox](https://dashboard.sandbox.joinforage.app/), [production](https://dashboard.joinforage.app/)).
+        client_secret:
+          type: string
+          description: The client secret for your application, found in the Forage dashboard ([sandbox](https://dashboard.sandbox.joinforage.app/), [production](https://dashboard.joinforage.app/)).
+        token:
+          type: string
+          description: The access token to be revoked.
+      required:
+      - token
+      - client_id
+      - client_secret
+    SessionTokenRequest:
+      type: object
+      description: 'Optional parameters to pass when creating a session token.
+
+        '
+      properties:
+        customer_id:
+          type: string
+          maxLength: 64
+          description: 'A unique identifier for the end customer. This value allows us to scope further actions to this user.
+
+
+            Each customer should only have one unique `customer_id` and it should be consistent across sessions.
+
+            '
+    BulkRevokeTokenRequest:
+      type: object
+      description: The configuration for the bulk token revocation.
+      properties:
+        client_id:
+          type: string
+          description: The client ID for your application, found in the Forage dashboard ([sandbox](https://dashboard.sandbox.joinforage.app/), [production](https://dashboard.joinforage.app/)).
+        client_secret:
+          type: string
+          description: The client secret for your application, found in the Forage dashboard ([sandbox](https://dashboard.sandbox.joinforage.app/), [production](https://dashboard.joinforage.app/)).
+        revoke_count:
+          type: integer
+          description: The number of tokens to revoke, between `1` and `1000`. Tokens are revoked in chronological order based on expiry time.
+      required:
+      - client_id
+      - client_secret
+      - revoke_count
+  responses:
+    Token200:
+      description: __OK__ - Success
+      headers:
+        X-REMAINING-TOKENS:
+          schema:
+            type: integer
+          description: Number of remaining tokens available for your app.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              access_token:
+                type: string
+                description: The authentication token to include as the bearer token in the header of server-side requests.
+                example: sandbox_uXpcGMAMs7hhbw9JifUuJlzUZS3zWD
+              expires_in:
+                type: integer
+                description: The number of seconds until the token expires.
+                example: 36000
+              token_type:
+                type: string
+                description: The type of the token, the constant string `"Bearer"`.
+                default: Bearer
+              scope:
+                type: string
+                description: The token's permissions level.
+                example: hosted_checkout
+    SessionToken201:
+      description: __Created__ - Success
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+                description: The authentication token to include as the bearer token in the `Authorization` header of client-side requests and as a parameter to SDK methods.
+                example: sandbox_eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhIjozOTYsImV4cCI6MTY4ODA4MTAzMH0.G9G97BGqEWpu3BfBo23MEVjr37ZdERplXD6cOx8BbiM
+              expiration_date:
+                type: string
+                description: A UTC timestamp that indicates when the token expires, represented as an [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) date-time string.
+                example: '2023-08-02T20:07:07-07:00'
+  parameters:
+    AuthenticationBearerTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 [authentication token](https://docs.joinforage.app/docs/authentication#authentication-tokens) that validates the request. Send a `POST` to the [`/o/token/`](https://docs.joinforage.app/reference/create-authentication-token) endpoint to generate an authentication token. Pass the token in this header after the word `Bearer` and a whitespace, for example `Bearer <api_key>`.
+      schema:
+        type: string
+      required: true
+    MerchantAccountHeader:
+      name: Merchant-Account
+      in: header
+      description: A unique merchant ID that Forage provides during onboarding, as in `123ab45c67`. The Merchant ID can be found in the Forage [sandbox](https://dashboard.sandbox.joinforage.app/login/) or [production](https://dashboard.joinforage.app/login/) dashboard.
+      schema:
+        type: string
+      required: true
+    CreateAuthenticationTokenHeader:
+      name: Authorization
+      in: header
+      description: An OAuth 2.0 credential that validates the request. Pass the the Client ID and Client Secret from the Forage dashboard, separated by a colon, as in `<client_id>:<client_secret>`, through a base64 encoding function. Send this encoded value in the header of the request after the word Basic, as in `Basic <encoded_credentials>`.
+      schema:
+        type: string
+      required: true
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your access token from the /o/token/ API, separated by whitespace.
+
+        '
+      flows:
+        password:
+          tokenUrl: /o/token/
+          scopes:
+            hosted_checkout: 'Scope for tokens used by merchant applications which allow Forage to manage split tender processing (i.e. EBT + Credit/Debit).
+
+              '
+            pinpad_only: 'Scope for tokens used by merchant applications which manage their own split tender (i.e. Forage Checkout is used only for EBT processing).
+
+              '
+        clientCredentials:
+          tokenUrl: /o/token/
+          scopes:
+            internal: 'Scope for tokens used by Forage internal applications.
+
+              '
+            pin-protected: 'Scope for tokens which can access secure storage.
+
+              '
+            disbursement: 'Scope for tokens which can disburse money to merchants.
+
+              '
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: 'Pass the access token in the ''Authorization'' header with the format "Bearer ${token}", i.e. the word "Bearer" and your JWT bearer token from the /api/session_token/ end-point, separated by whitespace.
+
+        '
+externalDocs:
+  description: Forage documentation
+  url: https://docs.joinforage.app/
+x-provenance:
+  method: searched
+  source: https://docs.joinforage.app/reference
+  harvested: '2026-10-14'
+  tool: harvest-readme-openapi.py
+  note: Assembled verbatim from the OpenAPI definition ReadMe embeds in each operation page of the provider's developer portal; paths and components merged by API title, nothing authored.
+  assembled_from:
+  - https://docs.joinforage.app/reference/authorize-a-payment.md
+  - https://docs.joinforage.app/reference/bulk-revoke-auth-tokens.md
+  - https://docs.joinforage.app/reference/cancel-a-payment.md
+  - https://docs.joinforage.app/reference/cancel-an-order-payment.md
+  - https://docs.joinforage.app/reference/cancel-order.md
+  - https://docs.joinforage.app/reference/capture-a-payment-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/capture-a-payment.md
+  - https://docs.joinforage.app/reference/create-a-payment.md
+  - https://docs.joinforage.app/reference/create-authentication-token.md
+  - https://docs.joinforage.app/reference/create-capture-session.md
+  - https://docs.joinforage.app/reference/create-custom-balance-check-session.md
+  - https://docs.joinforage.app/reference/create-payment-method.md
+  - https://docs.joinforage.app/reference/create-payment-refund.md
+  - https://docs.joinforage.app/reference/create-refunds-by-product.md
+  - https://docs.joinforage.app/reference/create-session-token.md
+  - https://docs.joinforage.app/reference/create-session.md
+  - https://docs.joinforage.app/reference/delete-payment-method.md
+  - https://docs.joinforage.app/reference/get-a-payment-refund.md
+  - https://docs.joinforage.app/reference/get-all-order-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payment-refunds.md
+  - https://docs.joinforage.app/reference/get-all-payments.md
+  - https://docs.joinforage.app/reference/get-an-order-payment.md
+  - https://docs.joinforage.app/reference/get-an-order-refund.md
+  - https://docs.joinforage.app/reference/get-order-report.md
+  - https://docs.joinforage.app/reference/get-order.md
+  - https://docs.joinforage.app/reference/get-payment-details.md
+  - https://docs.joinforage.app/reference/get-payment-method.md
+  - https://docs.joinforage.app/reference/get-payout-report.md
+  - https://docs.joinforage.app/reference/get-payout-transaction-report.md
+  - https://docs.joinforage.app/reference/get-transaction-report.md
+  - https://docs.joinforage.app/reference/patch-update-an-order-payment.md
+  - https://docs.joinforage.app/reference/refund-entire-order.md
+  - https://docs.joinforage.app/reference/refund-partial-order.md
+  - https://docs.joinforage.app/reference/retrieve-all-payments-for-merchant-order-id.md
+  - https://docs.joinforage.app/reference/retrieve-state-card-details.md
+  - https://docs.joinforage.app/reference/revoke-authentication-token.md
+  - https://docs.joinforage.app/reference/submit-pin-during-sandbox-testing.md
+  - https://docs.joinforage.app/reference/update-a-payment.md
+  - https://docs.joinforage.app/reference/update-order.md
+  - https://docs.joinforage.app/reference/update-payment-method.md
+  - https://docs.joinforage.app/reference/view-balance-session.md
+  - https://docs.joinforage.app/reference/void-a-payment-custom-checkout.md
+  - https://docs.joinforage.app/reference/void-a-refund.md
+  merge:
+    pages: 43
+    deduped: 461
+    conflicts_kept_first: 0

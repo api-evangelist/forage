@@ -294,6 +294,8 @@ apis:
   humanURL: https://docs.joinforage.app/reference/introduction
   baseURL: https://api.joinforage.app
   tags:
+  - Order
+  tags_raw:
   - Orders
   properties:
   - type: OpenAPI

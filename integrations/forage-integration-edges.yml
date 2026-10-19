@@ -1,16 +1,53 @@
 generated: '2026-10-14'
-method: none
+method: searched
 source:
 - https://zapier.com/apps/forage/integrations
 - https://n8n.io/integrations/forage/
 - https://composio.dev/toolkits/forage
 - https://monid.ai/tools/forage
 checked:
+- https://api.nuget.org/v3
 - https://composio.dev/toolkits/forage
+- https://crates.io/api/v1
 - https://monid.ai/tools/forage
 - https://n8n.io/integrations/forage/
+- https://proxy.golang.org
+- https://pypi.org/pypi
+- https://registry.npmjs.org
+- https://repo1.maven.org/maven2
+- https://rubygems.org/api/v1
 - https://zapier.com/apps/forage/integrations
 summary: null
 marketplace_apps: []
-edges: []
+edges:
+- partner_name: Maven Central
+  partner: maven-central
+  partner_match: register
+  type: register
+  direction: provider-built
+  category: official SDK (Java/JVM)
+  evidence: https://central.sonatype.com/artifact/com.joinforage/forage-android
+  channel: package-registry
+  relationship: distribution-channel
+  contract_reference:
+    register: Maven Central (public registry JSON)
+    spec_file: null
+    language: Java/JVM
+    packages:
+    - name: com.joinforage:forage-android
+      version: 4.2.2
+      released: '2026-01-08'
+      released_field: lastUpdated
+      lapsed: false
+      page: https://central.sonatype.com/artifact/com.joinforage/forage-android
+      repo_leg: github-org:teamforage
+      publisher_leg: groupId:joinforage.com
+      matched_by: domain
+    current: true
+    signal_note: 'an official package on the registry: distribution, not an integration; lapsed = no release in
+      24 months'
+    detected_by: sweep-official-sdks.py
+    detected: '2026-10-18'
+  detected_by: sweep-official-sdks.py
+  first_seen: '2026-10-18'
 templates: []
